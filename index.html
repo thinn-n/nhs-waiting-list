@@ -72,52 +72,64 @@
   .btn:hover{border-color:var(--nhs)}
   .btn.active{background:var(--nhs);border-color:var(--nhs);color:#fff}
 
-  /* map + side panel layout */
-  .maplayout{display:grid;grid-template-columns:1fr 292px;gap:20px;align-items:start}
-  .mpanel{display:flex;flex-direction:column;gap:14px;position:sticky;top:80px}
-  .mp-block{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  /* map-first layout: panels float over the map */
+  .maplayout{position:relative}
+  #map{height:720px;border:1px solid var(--line);border-radius:12px;background:#eaf0f6;
+    box-shadow:0 2px 10px rgba(0,50,135,.06)}
+  .mpanel{position:absolute;top:16px;right:16px;z-index:600;width:290px;
+    display:flex;flex-direction:column;gap:10px;max-height:calc(100% - 32px);
+    overflow-y:auto;overflow-x:hidden;pointer-events:none;padding-right:2px}
+  .mpanel > *{pointer-events:auto}
+  .mpanel::-webkit-scrollbar{width:6px}
+  .mpanel::-webkit-scrollbar-thumb{background:rgba(0,50,135,.22);border-radius:3px}
+  .mp-block{background:rgba(255,255,255,.97);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    box-shadow:0 4px 18px rgba(0,50,135,.13)}
   .mp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:12px 14px;background:#f7fafc;border-bottom:1px solid var(--line)}
-  .mp-head h3{margin:0;font-size:.84rem;font-weight:700;color:var(--ink);letter-spacing:-.005em}
-  .mp-toggle{background:none;border:0;color:var(--nhs);font-family:var(--body);font-size:.74rem;
+    padding:10px 13px;background:rgba(247,250,252,.95);border-bottom:1px solid var(--line);cursor:pointer}
+  .mp-head h3{margin:0;font-size:.82rem;font-weight:700;color:var(--ink)}
+  .mp-toggle{background:none;border:0;color:var(--nhs);font-family:var(--body);font-size:.72rem;
     font-weight:600;cursor:pointer;padding:2px 4px;border-radius:4px}
   .mp-toggle:hover{text-decoration:underline}
-  .mp-body{padding:14px}
+  .mp-body{padding:13px}
   .mp-body.collapsed{display:none}
-  .mp-empty{margin:0;font-size:.8rem;color:var(--dim);line-height:1.5}
+  .mp-empty{margin:0;font-size:.79rem;color:var(--dim);line-height:1.5}
 
-  /* selected region content */
-  .sel-name{font-size:1rem;font-weight:700;margin:0 0 2px}
-  .sel-badge{display:inline-block;font-size:.68rem;font-weight:700;color:#fff;
-    padding:2px 8px;border-radius:20px;margin-bottom:12px}
-  .sel-row{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;
-    padding:6px 0;border-bottom:1px solid #eef2f6}
+  /* the selected-region block behaves like a dismissible popup card */
+  .mp-block.sel{border-left:3px solid var(--nhs)}
+  .mp-block.sel.empty{opacity:.85}
+  .mp-close{background:none;border:0;color:var(--dim);font-size:1rem;line-height:1;
+    cursor:pointer;padding:0 2px}
+  .mp-close:hover{color:var(--ink)}
+
+  .sel-name{font-size:.98rem;font-weight:700;margin:0 0 2px}
+  .sel-badge{display:inline-block;font-size:.67rem;font-weight:700;color:#fff;
+    padding:2px 8px;border-radius:20px;margin-bottom:11px}
+  .sel-row{display:flex;justify-content:space-between;gap:10px;font-size:.79rem;
+    padding:5px 0;border-bottom:1px solid #eef2f6}
   .sel-row:last-child{border-bottom:0}
   .sel-row .k{color:var(--dim)}
   .sel-row .v{font-weight:700;font-variant-numeric:tabular-nums}
-  .sel-bar{height:6px;border-radius:3px;background:#e8eef4;overflow:hidden;margin:10px 0 4px}
+  .sel-bar{height:6px;border-radius:3px;background:#e8eef4;overflow:hidden;margin:9px 0 4px}
   .sel-bar span{display:block;height:100%;border-radius:3px;transition:width .5s ease}
-  .sel-caption{font-size:.72rem;color:var(--dim);margin:0}
+  .sel-caption{font-size:.71rem;color:var(--dim);margin:0}
 
-  /* key points */
-  .hi-item{padding:8px 0;border-bottom:1px solid #eef2f6}
+  .hi-item{padding:7px 0;border-bottom:1px solid #eef2f6}
   .hi-item:last-child{border-bottom:0}
-  .hi-item b{display:block;font-size:.79rem;color:var(--ink);margin-bottom:1px}
-  .hi-item span{font-size:.76rem;color:var(--dim);line-height:1.45}
+  .hi-item b{display:block;font-size:.78rem;color:var(--ink);margin-bottom:1px}
+  .hi-item span{font-size:.75rem;color:var(--dim);line-height:1.45}
 
-  /* legend */
-  .lg-item{display:flex;align-items:center;gap:9px;font-size:.76rem;color:var(--dim);padding:4px 0}
+  .lg-item{display:flex;align-items:center;gap:9px;font-size:.75rem;color:var(--dim);padding:3px 0}
   .lg-swatch{width:13px;height:13px;border-radius:50%;flex:0 0 auto;border:1.5px solid #fff;
     box-shadow:0 0 0 1px rgba(0,0,0,.12)}
   .lg-size{display:flex;align-items:center;gap:6px;padding-top:8px;margin-top:6px;border-top:1px solid #eef2f6}
   .lg-size i{border-radius:50%;background:#9fb8ca;display:inline-block}
 
   @media(max-width:900px){
-    .maplayout{grid-template-columns:1fr}
-    .mpanel{position:static;flex-direction:column}
+    #map{height:560px}
+    .mpanel{position:static;width:auto;max-height:none;margin-top:14px;overflow:visible}
+    .mp-block{background:var(--card);backdrop-filter:none;box-shadow:none}
   }
-  #map{height:560px;border:1px solid var(--line);border-radius:12px;background:#eaf0f6;
-    box-shadow:0 2px 10px rgba(0,50,135,.06)}
   .leaflet-popup-content-wrapper{background:#fff;color:var(--ink);border-radius:10px;
     box-shadow:0 6px 24px rgba(0,50,135,.18)}
   .pop h3{margin:0 0 8px;font-size:1.05rem;color:var(--nhs-dark);font-weight:700}
@@ -141,6 +153,7 @@
   .pin.alert .ring{animation:alertPulse 1.5s cubic-bezier(0,.3,.6,1) infinite}
   .pin.alert .ring2{position:absolute;inset:0;border-radius:50%;animation:alertPulse 1.5s cubic-bezier(0,.3,.6,1) infinite;animation-delay:.75s}
   .pin.alert .core{animation:breathe 1.5s ease-in-out infinite}
+  .pin.selected .core{box-shadow:0 0 0 4px rgba(0,94,184,.45),0 2px 6px rgba(0,0,0,.3)}
 
   .dash{display:grid;grid-template-columns:1fr 1fr;gap:26px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:30px 32px}
@@ -297,14 +310,16 @@
   <div class="maplayout">
     <div id="map"></div>
     <aside class="mpanel">
-      <div class="mp-block">
+      <div class="mp-block sel" id="selblock" style="display:none">
         <div class="mp-head">
           <h3>Selected region</h3>
-          <button class="mp-toggle" data-panel="sel" aria-expanded="true">Hide</button>
+          <button class="mp-close" id="selclose" aria-label="Close">&times;</button>
         </div>
-        <div class="mp-body" id="selpanel">
-          <p class="mp-empty">Select a marker on the map to inspect a region.</p>
-        </div>
+        <div class="mp-body" id="selpanel"></div>
+      </div>
+
+      <div class="mp-block" id="hintblock">
+        <div class="mp-body"><p class="mp-empty">Click any region marker to open its details.</p></div>
       </div>
 
       <div class="mp-block">
@@ -551,6 +566,16 @@ function pinIcon(colour,size,alert){
       ${alert?`<div class="ring2" style="background:${colour}"></div>`:''}
       <div class="core" style="background:${colour}"></div></div>`});
 }
+let selectedRegion=null;
+function markSelected(region){
+  Object.entries(markerByRegion).forEach(([r,m])=>{
+    const el=m.getElement(); if(!el) return;
+    const pin=el.querySelector('.pin'); if(!pin) return;
+    pin.classList.toggle('selected', r===region);
+  });
+  selectedRegion=region;
+}
+window.clearRegionHighlight=function(){markSelected(null);};
 function highlightRegion(region, on){
   document.querySelectorAll(`.bar-row[data-region="${region}"]`).forEach(r=>r.classList.toggle('hi',on));
   const m=markerByRegion[region]; if(m){const el=m.getElement(); if(el){const pin=el.querySelector('.pin'); if(pin) pin.classList.toggle('hi',on);}}
@@ -700,8 +725,18 @@ document.getElementById('insight').innerHTML=
   });
 
   /* selected-region panel: persistent inspection instead of a transient popup */
+  const selBlock=document.getElementById('selblock');
+  const hintBlock=document.getElementById('hintblock');
+  document.getElementById('selclose').addEventListener('click',()=>{
+    selBlock.style.display='none';
+    if(hintBlock) hintBlock.style.display='';
+    if(window.clearRegionHighlight) clearRegionHighlight();
+  });
   window.selectRegion=function(region){
     const d=data.find(x=>x.region===region); if(!d) return;
+    selBlock.style.display='';
+    if(hintBlock) hintBlock.style.display='none';
+    if(typeof markSelected==='function') markSelected(region);
     const [label,col]=perf(d);
     const pct=Math.min(100,d.pct18/92*100);
     document.getElementById('selpanel').innerHTML=`
