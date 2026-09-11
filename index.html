@@ -72,6 +72,50 @@
   .btn:hover{border-color:var(--nhs)}
   .btn.active{background:var(--nhs);border-color:var(--nhs);color:#fff}
 
+  /* map + side panel layout */
+  .maplayout{display:grid;grid-template-columns:1fr 292px;gap:20px;align-items:start}
+  .mpanel{display:flex;flex-direction:column;gap:14px;position:sticky;top:80px}
+  .mp-block{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .mp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 14px;background:#f7fafc;border-bottom:1px solid var(--line)}
+  .mp-head h3{margin:0;font-size:.84rem;font-weight:700;color:var(--ink);letter-spacing:-.005em}
+  .mp-toggle{background:none;border:0;color:var(--nhs);font-family:var(--body);font-size:.74rem;
+    font-weight:600;cursor:pointer;padding:2px 4px;border-radius:4px}
+  .mp-toggle:hover{text-decoration:underline}
+  .mp-body{padding:14px}
+  .mp-body.collapsed{display:none}
+  .mp-empty{margin:0;font-size:.8rem;color:var(--dim);line-height:1.5}
+
+  /* selected region content */
+  .sel-name{font-size:1rem;font-weight:700;margin:0 0 2px}
+  .sel-badge{display:inline-block;font-size:.68rem;font-weight:700;color:#fff;
+    padding:2px 8px;border-radius:20px;margin-bottom:12px}
+  .sel-row{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;
+    padding:6px 0;border-bottom:1px solid #eef2f6}
+  .sel-row:last-child{border-bottom:0}
+  .sel-row .k{color:var(--dim)}
+  .sel-row .v{font-weight:700;font-variant-numeric:tabular-nums}
+  .sel-bar{height:6px;border-radius:3px;background:#e8eef4;overflow:hidden;margin:10px 0 4px}
+  .sel-bar span{display:block;height:100%;border-radius:3px;transition:width .5s ease}
+  .sel-caption{font-size:.72rem;color:var(--dim);margin:0}
+
+  /* key points */
+  .hi-item{padding:8px 0;border-bottom:1px solid #eef2f6}
+  .hi-item:last-child{border-bottom:0}
+  .hi-item b{display:block;font-size:.79rem;color:var(--ink);margin-bottom:1px}
+  .hi-item span{font-size:.76rem;color:var(--dim);line-height:1.45}
+
+  /* legend */
+  .lg-item{display:flex;align-items:center;gap:9px;font-size:.76rem;color:var(--dim);padding:4px 0}
+  .lg-swatch{width:13px;height:13px;border-radius:50%;flex:0 0 auto;border:1.5px solid #fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+  .lg-size{display:flex;align-items:center;gap:6px;padding-top:8px;margin-top:6px;border-top:1px solid #eef2f6}
+  .lg-size i{border-radius:50%;background:#9fb8ca;display:inline-block}
+
+  @media(max-width:900px){
+    .maplayout{grid-template-columns:1fr}
+    .mpanel{position:static;flex-direction:column}
+  }
   #map{height:560px;border:1px solid var(--line);border-radius:12px;background:#eaf0f6;
     box-shadow:0 2px 10px rgba(0,50,135,.06)}
   .leaflet-popup-content-wrapper{background:#fff;color:var(--ink);border-radius:10px;
@@ -250,7 +294,36 @@
     <button class="btn" data-metric="over52">52+ week waits</button>
   </div>
   <div class="controls" id="focus" style="margin-bottom:24px"></div>
-  <div id="map"></div>
+  <div class="maplayout">
+    <div id="map"></div>
+    <aside class="mpanel">
+      <div class="mp-block">
+        <div class="mp-head">
+          <h3>Selected region</h3>
+          <button class="mp-toggle" data-panel="sel" aria-expanded="true">Hide</button>
+        </div>
+        <div class="mp-body" id="selpanel">
+          <p class="mp-empty">Select a marker on the map to inspect a region.</p>
+        </div>
+      </div>
+
+      <div class="mp-block">
+        <div class="mp-head">
+          <h3>Key points</h3>
+          <button class="mp-toggle" data-panel="hi" aria-expanded="true">Hide</button>
+        </div>
+        <div class="mp-body" id="hipanel"></div>
+      </div>
+
+      <div class="mp-block">
+        <div class="mp-head">
+          <h3>Legend</h3>
+          <button class="mp-toggle" data-panel="leg" aria-expanded="true">Hide</button>
+        </div>
+        <div class="mp-body" id="legpanel"></div>
+      </div>
+    </aside>
+  </div>
 </section>
 
 <section class="wrap">
@@ -489,13 +562,10 @@ function draw(metric){
     const colour=colourFor(d,metric);
     const m=L.marker([d.lat,d.lon],{icon:pinIcon(colour,size,d.region===worst.region)}).addTo(map);
     const fc=d.pct18>=70?'var(--good)':d.pct18>=64?'var(--warn)':'var(--bad)';
-    m.bindPopup(`<div class="pop"><h3>${d.region}</h3><table>
-      <tr><td>Patients waiting</td><td>${fmt(d.total)}</td></tr>
-      <tr><td>Within 18 weeks</td><td>${d.pct18}%</td></tr>
-      <tr><td>Over 52 weeks</td><td>${fmt(d.over52)}</td></tr>
-      <tr><td>Over 65 weeks</td><td>${fmt(d.over65)}</td></tr></table>
-      <span class="flag" style="background:${fc}">${d.pct18>=70?'Above average':d.pct18>=64?'Around average':'Below average'}</span></div>`);
-    m.bindTooltip(`${d.region} · ${d.pct18}% within 18wks`,{direction:'top'});
+    // detail is shown in the side panel, not a popup (avoids duplicate UI)
+
+    m.bindTooltip(`<b>${d.region}</b><br>${d.pct18}% within 18 weeks · ${fmt(d.total)} waiting<br><span style="color:#7d8794">Click to inspect</span>`,{direction:'top',opacity:.97});
+    m.on('click',()=>selectRegion(d.region));
     m.on('mouseover',()=>highlightRegion(d.region,true));
     m.on('mouseout',()=>highlightRegion(d.region,false));
     markers.push(m); markerByRegion[d.region]=m;
@@ -503,13 +573,7 @@ function draw(metric){
 }
 draw('pct18');
 
-const legend=L.control({position:'bottomright'});
-legend.onAdd=function(){const div=L.DomUtil.create('div','legend');
-  div.innerHTML=`<b>Performance</b>
-    <span class="dot" style="background:${lerp(0)}"></span>Lower performance<br>
-    <span class="dot" style="background:${lerp(1)}"></span>Higher performance<br>
-    <span>Size = patients waiting</span>`;return div;};
-legend.addTo(map);
+
 
 document.querySelectorAll('[data-metric]').forEach(b=>{
   b.onclick=()=>{document.querySelectorAll('[data-metric]').forEach(x=>x.classList.remove('active'));
@@ -518,7 +582,7 @@ document.querySelectorAll('[data-metric]').forEach(b=>{
 
 const fc=document.getElementById('focus');
 fc.innerHTML='<span class="ctrl-label">Jump to:</span>'+data.map((d,i)=>`<button class="btn" data-i="${i}">${d.region}</button>`).join('');
-fc.querySelectorAll('[data-i]').forEach(b=>{b.onclick=()=>{const d=data[b.dataset.i];map.flyTo([d.lat,d.lon],7,{duration:.8});markers[b.dataset.i].openPopup();};});
+fc.querySelectorAll('[data-i]').forEach(b=>{b.onclick=()=>{const d=data[b.dataset.i];if(window.selectRegion)selectRegion(d.region);map.flyTo([d.lat,d.lon],7,{duration:.8});};});
 
 function bars(id,key,{pct=false}={}){
   const el=document.getElementById(id);
@@ -543,9 +607,10 @@ function bars(id,key,{pct=false}={}){
     row.addEventListener('focus',()=>{highlightRegion(region,true);showCard(region);});
     row.addEventListener('blur',()=>{highlightRegion(region,false);hideCard();});
     const go=()=>{const d=data.find(x=>x.region===region);
+      if(window.selectRegion) selectRegion(region);
       document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
       map.flyTo([d.lat,d.lon],7,{duration:.8});
-      setTimeout(()=>markerByRegion[region].openPopup(),650);};
+      };
     row.addEventListener('click',go);
     row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
   });
@@ -596,6 +661,62 @@ document.getElementById('insight').innerHTML=
    wider still: <b>${wspec.name}</b> reaches just ${wspec.pct18}% compared with ${bspec.pct18}%
    for <b>${bspec.name}</b> — a spread of ${(bspec.pct18-wspec.pct18).toFixed(1)} percentage points,
    suggesting capacity in specific services matters more than geography alone.`;
+
+
+/* ---- side panels: selected region, key points, legend ---- */
+(function(){
+  /* key points: editorial context beside the data */
+  const most52=[...data].sort((a,b)=>b.over52-a.over52)[0];
+  const biggest=[...data].sort((a,b)=>b.total-a.total)[0];
+  const best=[...data].sort((a,b)=>b.pct18-a.pct18)[0];
+  const spread=(best.pct18-worst.pct18).toFixed(1);
+  const items=[
+    ['18-week standard','92% of patients should start treatment within 18 weeks of referral. England is at '+natPct+'%.'],
+    ['Widest regional gap, '+spread+' points',best.region+' reaches '+best.pct18+'%, '+worst.region+' '+worst.pct18+'%.'],
+    ['Longest waits',fmt(most52.over52)+' patients in '+most52.region+' have waited over a year.'],
+    ['Largest list',biggest.region+' holds '+fmt(biggest.total)+' pathways \u2014 '+Math.round(biggest.total/natTotal*100)+'% of England\u2019s total.'],
+    ['Pathways, not people','One patient can sit on more than one pathway, so pathway counts exceed patient counts.'],
+  ];
+  document.getElementById('hipanel').innerHTML=items.map(([t,d])=>
+    `<div class="hi-item"><b>${t}</b><span>${d}</span></div>`).join('');
+
+  /* legend: encodes colour AND size AND the alert state */
+  document.getElementById('legpanel').innerHTML=`
+    <div class="lg-item"><span class="lg-swatch" style="background:${lerp(1)}"></span>Higher performance</div>
+    <div class="lg-item"><span class="lg-swatch" style="background:${lerp(.5)}"></span>Mid-range</div>
+    <div class="lg-item"><span class="lg-swatch" style="background:${lerp(0)}"></span>Lower performance</div>
+    <div class="lg-item"><span class="lg-swatch" style="background:var(--bad);box-shadow:0 0 0 3px rgba(218,41,28,.25)"></span>Lowest performer (pulsing)</div>
+    <div class="lg-size"><i style="width:9px;height:9px"></i><i style="width:15px;height:15px"></i>
+      <span style="font-size:.74rem;color:var(--dim)">Marker size = patients waiting</span></div>`;
+
+  /* collapsible panels */
+  document.querySelectorAll('.mp-toggle').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const body=btn.closest('.mp-block').querySelector('.mp-body');
+      const open=!body.classList.toggle('collapsed');
+      btn.textContent=open?'Hide':'Show';
+      btn.setAttribute('aria-expanded',String(open));
+    });
+  });
+
+  /* selected-region panel: persistent inspection instead of a transient popup */
+  window.selectRegion=function(region){
+    const d=data.find(x=>x.region===region); if(!d) return;
+    const [label,col]=perf(d);
+    const pct=Math.min(100,d.pct18/92*100);
+    document.getElementById('selpanel').innerHTML=`
+      <p class="sel-name">${d.region}</p>
+      <span class="sel-badge" style="background:${col}">${label}</span>
+      <div class="sel-row"><span class="k">Patients waiting</span><span class="v">${fmt(d.total)}</span></div>
+      <div class="sel-row"><span class="k">Within 18 weeks</span><span class="v">${d.pct18}%</span></div>
+      <div class="sel-bar"><span style="width:${pct}%;background:${col}"></span></div>
+      <p class="sel-caption">${(92-d.pct18).toFixed(1)} points below the 92% standard</p>
+      <div class="sel-row" style="margin-top:10px"><span class="k">Over 52 weeks</span><span class="v">${fmt(d.over52)}</span></div>
+      <div class="sel-row"><span class="k">Over 65 weeks</span><span class="v">${fmt(d.over65)}</span></div>
+      <div class="sel-row"><span class="k">Over 78 weeks</span><span class="v">${fmt(d.over78)}</span></div>
+      <div class="sel-row"><span class="k">Share of England</span><span class="v">${(d.total/natTotal*100).toFixed(1)}%</span></div>`;
+  };
+})();
 
 /* ---- 03 specialty scatter: list size vs performance ---- */
 (function(){
