@@ -49,9 +49,13 @@
   .stat.warn .n{color:var(--warn)}
   .stat[title]{cursor:help}
 
-  section{padding:44px 0}
-  h2{font-size:1.5rem;margin:0 0 4px;font-weight:800;letter-spacing:-.01em}
-  .lede{color:var(--dim);margin:0 0 22px;max-width:64ch}
+  /* consistent section rhythm with clean dividers */
+  section{padding:52px 0}
+  section + section{border-top:1px solid var(--line)}
+  .shead{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .shead .num{font-size:.74rem;font-weight:700;color:var(--nhs);letter-spacing:.12em}
+  h2{font-size:1.5rem;margin:0;font-weight:800;letter-spacing:-.01em}
+  .lede{color:var(--dim);margin:6px 0 24px;max-width:64ch}
 
   .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
   .ctrl-label{color:var(--dim);font-size:.78rem;margin-right:4px;font-weight:500}
@@ -101,9 +105,14 @@
   /* map marker highlight when linked from a bar */
   .pin.hi{z-index:1000!important}
   .pin.hi .core{transform:scale(1.5);box-shadow:0 0 0 4px rgba(0,94,184,.35),0 2px 6px rgba(0,0,0,.3)}
-  .track{background:#e8eef4;height:22px;border-radius:5px;position:relative;overflow:hidden}
-  .fill{height:100%;background:var(--nhs);border-radius:5px;transition:width .8s cubic-bezier(.22,.61,.36,1)}
-  .fill.red{background:var(--bad)}.fill.amber{background:var(--warn)}
+  .track{display:block;background:#e8eef4;height:22px;border-radius:5px;position:relative;overflow:hidden;
+    border:1px solid #dde5ec}
+  .fill{display:block;height:100%;border-radius:4px;transition:width .8s cubic-bezier(.22,.61,.36,1);
+    background:linear-gradient(90deg,var(--nhs-dark),var(--nhs-bright));
+    box-shadow:inset 0 -1px 0 rgba(0,0,0,.08)}
+  .fill.green{background:linear-gradient(90deg,#00702b,var(--good))}
+  .fill.amber{background:linear-gradient(90deg,#c46f00,var(--warn))}
+  .fill.red{background:linear-gradient(90deg,#a81f14,var(--bad))}
   .val{font-size:.82rem;font-weight:700;font-variant-numeric:tabular-nums}
   .target-line{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--nhs-dark);z-index:2}
 
@@ -111,7 +120,11 @@
     border-radius:8px;padding:18px 20px;margin-top:24px;color:var(--dim)}
   .insight b{color:var(--ink)}
 
-  footer{border-top:1px solid var(--line);padding:24px 0 48px;color:#5f7386;font-size:.8rem}
+  footer{border-top:1px solid var(--line);padding:26px 0 48px;color:#5f7386;font-size:.8rem}
+  footer .fnote{max-width:80ch;line-height:1.6}
+  footer .fbar{display:flex;justify-content:space-between;align-items:center;gap:16px;
+    margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:.78rem}
+  footer .fbar span:last-child{color:var(--dim);font-weight:500}
 
   /* Power BI-style floating hover card */
   #hovercard{position:fixed;z-index:9999;pointer-events:none;opacity:0;transform:translateY(4px);
@@ -140,6 +153,7 @@
     h1{font-size:1.8rem}.stats{grid-template-columns:repeat(2,1fr)}
     .dash{grid-template-columns:1fr}.bar-row{grid-template-columns:104px 1fr 50px}
     #map{height:420px}.ecg{display:none}
+    footer .fbar{flex-direction:column;align-items:flex-start;gap:6px}
   }
 </style>
 </head>
@@ -157,16 +171,16 @@
   </svg>
   <span class="eyebrow">NHS England · Referral to Treatment</span>
   <h1>England's Hospital Waiting Lists, Region by Region</h1>
-  <p class="sub">Every region is missing the 18-week treatment target — but not by the same margin.
-    Explore where patients wait longest.</p>
+  <p class="sub">Performance against the 18-week treatment standard varies across regions.
+    Explore where patients are waiting longest.</p>
   <div class="meta">Incomplete pathways · July 2026 · figures are pathways, not individual patients</div>
   <div class="stats" id="stats"></div>
 </div></header>
 
 <section class="wrap">
-  <h2>Regional map</h2>
+  <div class="shead"><span class="num">01</span><h2>Regional map</h2></div>
   <p class="lede">Each marker is an NHS region. Size = number of patients waiting. Colour = performance
-    against the 18-week target. The region furthest from target pulses as an alert.</p>
+    against the 18-week standard. The region with the lowest performance is highlighted.</p>
   <div class="controls">
     <span class="ctrl-label">Colour by:</span>
     <button class="btn active" data-metric="pct18">% within 18 weeks</button>
@@ -177,7 +191,7 @@
 </section>
 
 <section class="wrap">
-  <h2>The regional picture</h2>
+  <div class="shead"><span class="num">02</span><h2>The regional picture</h2></div>
   <p class="lede">The size of each waiting list, and how far each region falls short of the 92% target.</p>
   <div class="dash">
     <div class="card">
@@ -187,7 +201,7 @@
     </div>
     <div class="card">
       <h3>Meeting the 18-week target</h3>
-      <p class="note">Blue line = 92% target. No region reaches it.</p>
+      <p class="note">Blue line marks the 92% standard</p>
       <div class="bars" id="bars-pct"></div>
     </div>
   </div>
@@ -195,9 +209,15 @@
 </section>
 
 <footer><div class="wrap">
-  Source: NHS England, Consultant-led Referral to Treatment Waiting Times, incomplete pathways,
-  July 2026. Regional totals summed across all treatment functions. Coordinates are approximate
-  regional centres. Built with <a href="https://leafletjs.com">Leaflet</a>.
+  <div class="fnote">
+    Source: NHS England, Consultant-led Referral to Treatment Waiting Times, incomplete pathways,
+    July 2026. Regional totals summed across all treatment functions. Coordinates are approximate
+    regional centres. Built with <a href="https://leafletjs.com">Leaflet</a>.
+  </div>
+  <div class="fbar">
+    <span><a href="https://github.com/ollielie/nhs-waiting-atlas">GitHub</a> · July 2026</span>
+    <span>NHS Waiting List Atlas · Open Source</span>
+  </div>
 </div></footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -223,7 +243,7 @@ const defs=[
  {v:natTotal/1e6,pre:'',suf:'M',dec:1,l:'Patients waiting in England',tip:'Total incomplete RTT pathways. One patient can have more than one pathway.'},
  {v:+natPct,pre:'',suf:'%',dec:1,l:'Seen within 18 weeks (target 92%)',cls:'warn',tip:'The NHS constitutional standard is 92% within 18 weeks. England is well below it.'},
  {v:nat52,pre:'',suf:'',dec:0,l:'Waiting over 52 weeks',cls:'bad',tip:'Patients waiting more than a year to start treatment. Near-zero before 2020.'},
- {v:worst.pct18,pre:'',suf:'%',dec:1,l:worst.region+' — furthest from target',cls:'bad',tip:'The worst-performing region against the 18-week standard.'},
+ {v:worst.pct18,pre:'',suf:'%',dec:1,l:worst.region+' — lowest performance',cls:'bad',tip:'The region currently recording the lowest performance against the 18-week standard.'},
 ];
 document.getElementById('stats').innerHTML=defs.map((s,i)=>
  `<div class="stat ${s.cls||''}" title="${s.tip}"><div class="n" id="st${i}">0</div><div class="l">${s.l}</div></div>`).join('');
@@ -261,7 +281,7 @@ function draw(metric){
       <tr><td>Within 18 weeks</td><td>${d.pct18}%</td></tr>
       <tr><td>Over 52 weeks</td><td>${fmt(d.over52)}</td></tr>
       <tr><td>Over 65 weeks</td><td>${fmt(d.over65)}</td></tr></table>
-      <span class="flag" style="background:${fc}">${d.pct18>=70?'Closest to target':d.pct18>=64?'Mid-pack':'Furthest from target'}</span></div>`);
+      <span class="flag" style="background:${fc}">${d.pct18>=70?'Above average':d.pct18>=64?'Around average':'Below average'}</span></div>`);
     m.bindTooltip(`${d.region} · ${d.pct18}% within 18wks`,{direction:'top'});
     m.on('mouseover',()=>highlightRegion(d.region,true));
     m.on('mouseout',()=>highlightRegion(d.region,false));
@@ -273,8 +293,8 @@ draw('pct18');
 const legend=L.control({position:'bottomright'});
 legend.onAdd=function(){const div=L.DomUtil.create('div','legend');
   div.innerHTML=`<b>Performance</b>
-    <span class="dot" style="background:${lerp(0)}"></span>Furthest from target<br>
-    <span class="dot" style="background:${lerp(1)}"></span>Closest to target<br>
+    <span class="dot" style="background:${lerp(0)}"></span>Lower performance<br>
+    <span class="dot" style="background:${lerp(1)}"></span>Higher performance<br>
     <span>Size = patients waiting</span>`;return div;};
 legend.addTo(map);
 
@@ -289,10 +309,12 @@ fc.querySelectorAll('[data-i]').forEach(b=>{b.onclick=()=>{const d=data[b.datase
 
 function bars(id,key,{pct=false}={}){
   const el=document.getElementById(id);
+  // totals: largest first. percentage: worst performer first.
   const rows=[...data].sort((a,b)=>pct?a[key]-b[key]:b[key]-a[key]);
   const max=pct?92:maxTotal;
   el.innerHTML=rows.map(d=>{const v=d[key],w=Math.min(100,(v/max)*100);
-    const cls=pct?(v<64?'red':v<70?'amber':''):'';
+    // colour every bar by that region's 18-week performance (triage)
+    const cls=d.pct18>=68?'green':d.pct18>=64?'amber':'red';
     return `<div class="bar-row" data-region="${d.region}" tabindex="0" role="button">
       <span class="name">${d.region}</span>
       <span class="track">${pct?'<span class="target-line" style="left:100%"></span>':''}
@@ -318,7 +340,7 @@ function bars(id,key,{pct=false}={}){
 
 /* Power BI-style hover card */
 const hc=document.getElementById('hovercard');
-function perf(d){return d.pct18>=70?['Closest to target','var(--good)']:d.pct18>=64?['Mid-pack','var(--warn)']:['Furthest from target','var(--bad)'];}
+function perf(d){return d.pct18>=70?['Above average','var(--good)']:d.pct18>=64?['Around average','var(--warn)']:['Below average','var(--bad)'];}
 function showCard(region){
   const d=data.find(x=>x.region===region); if(!d) return;
   const[label,col]=perf(d);
@@ -353,10 +375,11 @@ const most52=[...data].sort((a,b)=>b.over52-a.over52)[0];
 const biggest=[...data].sort((a,b)=>b.total-a.total)[0];
 const[,maxPct]=range('pct18');
 document.getElementById('insight').innerHTML=
-  `<b>The story:</b> No English region meets the 92% target — the best manages just ${maxPct}%.
-   <b>${worst.region}</b> is furthest behind at ${worst.pct18}%, and carries the most year-plus
-   waits (${fmt(most52.over52)}). <b>${biggest.region}</b> holds the largest list overall at
-   ${fmt(biggest.total)} patients.`;
+  `<b>Summary:</b> Across all seven commissioning regions, performance currently falls short of the
+   92% standard, with the strongest region reaching ${maxPct}%. <b>${worst.region}</b> records the
+   lowest performance at ${worst.pct18}% and the highest number of patients waiting over a year
+   (${fmt(most52.over52)}). <b>${biggest.region}</b> carries the largest waiting list overall, at
+   ${fmt(biggest.total)} pathways.`;
 </script>
 </body>
 </html>
