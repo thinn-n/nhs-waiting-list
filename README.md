@@ -4,8 +4,6 @@ An interactive, NHS-branded dashboard mapping England's hospital waiting lists r
 
 **Live site:** https://ollielie.github.io/nhs-waiting-atlas/
 
-![NHS Waiting List Atlas: a light, medical-themed interactive map and dashboard](preview.png)
-
 ## What it shows
 
 Consultant-led Referral to Treatment (RTT) waiting-list figures for each of the seven NHS England commissioning regions, as of July 2026.
