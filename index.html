@@ -29,9 +29,9 @@
 
   /* hero with ECG line */
   header{background:linear-gradient(180deg,#e3eef9,var(--paper));border-bottom:1px solid var(--line);
-    padding:48px 0 40px;position:relative;overflow:hidden}
-  .eyebrow{color:var(--nhs);font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
-  h1{font-size:2.6rem;line-height:1.08;margin:.25em 0 .3em;font-weight:800;letter-spacing:-.02em;max-width:20ch}
+    padding:64px 0 56px;position:relative;overflow:hidden}
+  .eyebrow{color:var(--nhs);font-size:.9rem;font-weight:600;letter-spacing:0}
+  h1{font-size:3rem;line-height:1.06;margin:.2em 0 .35em;font-weight:700;letter-spacing:-.03em;max-width:22ch}
   .sub{color:var(--dim);max-width:58ch;font-size:1.08rem}
   .meta{margin-top:16px;color:#5f7386;font-size:.82rem}
   .ecg{position:absolute;right:-20px;top:30px;width:340px;height:90px;opacity:.5}
@@ -40,24 +40,25 @@
   @keyframes trace{to{stroke-dashoffset:0}}
 
   /* stat cards */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:32px 0 0}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;
-    box-shadow:0 1px 3px rgba(0,50,135,.05)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:44px 0 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px 24px;
+    border-top:3px solid var(--nhs)}
   .stat .n{font-size:1.95rem;font-weight:800;letter-spacing:-.02em;line-height:1;color:var(--nhs)}
   .stat .l{font-size:.79rem;color:var(--dim);margin-top:7px;line-height:1.4}
-  .stat.bad .n{color:var(--bad)}
-  .stat.warn .n{color:var(--warn)}
+  .stat.bad{border-top-color:var(--bad)}.stat.bad .n{color:var(--bad)}
+  .stat.warn{border-top-color:var(--warn)}.stat.warn .n{color:var(--warn)}
   .stat[title]{cursor:help}
 
-  /* consistent section rhythm with clean dividers */
-  section{padding:52px 0}
+  /* section rhythm: generous, consistent vertical scale */
+  section{padding:64px 0 68px}
   section + section{border-top:1px solid var(--line)}
-  .shead{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
-  .shead .num{font-size:.74rem;font-weight:700;color:var(--nhs);letter-spacing:.12em}
-  h2{font-size:1.5rem;margin:0;font-weight:800;letter-spacing:-.01em}
-  .lede{color:var(--dim);margin:6px 0 24px;max-width:64ch}
+  .shead{display:flex;align-items:baseline;justify-content:space-between;gap:24px;
+    flex-wrap:wrap;padding-bottom:16px;margin-bottom:18px;border-bottom:2px solid var(--nhs)}
+  h2{font-size:1.75rem;line-height:1.2;margin:0;font-weight:700;letter-spacing:-.02em}
+  .shead .scount{font-size:.86rem;color:var(--dim);font-weight:500;white-space:nowrap}
+  .lede{color:var(--dim);margin:0 0 40px;max-width:68ch;font-size:1.02rem;line-height:1.65}
 
-  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center}
   .ctrl-label{color:var(--dim);font-size:.78rem;margin-right:4px;font-weight:500}
   .btn{background:#fff;color:var(--nhs);border:1px solid var(--line);border-radius:6px;
     padding:7px 13px;font-size:.8rem;cursor:pointer;font-family:var(--body);font-weight:500;transition:.15s}
@@ -90,12 +91,11 @@
   .pin.alert .ring2{position:absolute;inset:0;border-radius:50%;animation:alertPulse 1.5s cubic-bezier(0,.3,.6,1) infinite;animation-delay:.75s}
   .pin.alert .core{animation:breathe 1.5s ease-in-out infinite}
 
-  .dash{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;
-    box-shadow:0 1px 3px rgba(0,50,135,.05)}
-  .card h3{margin:0 0 3px;font-size:1.05rem;font-weight:700}
-  .card .note{font-size:.79rem;color:var(--dim);margin:0 0 18px}
-  .bars{display:flex;flex-direction:column;gap:12px}
+  .dash{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:30px 32px}
+  .card h3{margin:0 0 4px;font-size:1.08rem;font-weight:700;letter-spacing:-.01em}
+  .card .note{font-size:.82rem;color:var(--dim);margin:0 0 26px}
+  .bars{display:flex;flex-direction:column;gap:14px}
   .bar-row{display:grid;grid-template-columns:150px 1fr 60px;align-items:center;gap:12px;
     padding:4px 8px;margin:0 -8px;border-radius:6px;cursor:pointer;transition:background .15s;outline:none}
   .bar-row:hover,.bar-row.hi,.bar-row:focus-visible{background:#eaf2fb}
@@ -117,15 +117,48 @@
   .target-line{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--nhs-dark);z-index:2}
 
   .insight{background:#fff5f4;border:1px solid #f3cfcb;border-left:4px solid var(--bad);
-    border-radius:8px;padding:18px 20px;margin-top:24px;color:var(--dim)}
+    border-radius:8px;padding:22px 24px;margin:34px 0 6px;color:var(--dim);line-height:1.65}
   .insight b{color:var(--ink)}
 
   footer{border-top:1px solid var(--line);padding:26px 0 48px;color:#5f7386;font-size:.8rem}
   footer .fnote{max-width:80ch;line-height:1.6}
   footer .fbar{display:flex;justify-content:space-between;align-items:center;gap:16px;
     margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:.78rem}
-  footer .fbar span:last-child{color:var(--dim);font-weight:500}
+  footer .fbar span:first-child{color:var(--dim);font-weight:500}
 
+  /* line chart */
+  .chartheader{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .chartoggle{display:flex;gap:6px}
+  #curvewrap{margin-top:8px}
+  #curve{width:100%;height:auto;display:block;overflow:visible}
+  #curve .grid{stroke:#e3eaf1;stroke-width:1}
+  #curve .axis{stroke:#c3d0db;stroke-width:1}
+  #curve .tick{fill:var(--dim);font-size:11px;font-family:var(--body)}
+  #curve .axlabel{fill:var(--dim);font-size:11px;font-weight:600;font-family:var(--body)}
+  #curve .area{fill:url(#cgrad)}
+  #curve .line{fill:none;stroke:var(--nhs);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+  #curve .thresh{stroke:var(--nhs-dark);stroke-width:1.5;stroke-dasharray:5 4}
+  #curve .threshlab{fill:var(--nhs-dark);font-size:11px;font-weight:700;font-family:var(--body)}
+  #curve .beyond{fill:rgba(237,139,0,.10)}
+  #curve .hit{fill:#fff;stroke:var(--nhs);stroke-width:2.5}
+  #curve .hover-line{stroke:#9fb3c4;stroke-width:1;stroke-dasharray:3 3}
+  .curvenote{margin-top:14px!important;font-style:italic;line-height:1.6}
+  /* distribution chart (legacy) */
+  .distchart{display:flex;align-items:flex-end;gap:10px;height:190px;margin-top:10px}
+  .dcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;justify-content:flex-end;height:100%}
+  .dbar{width:100%;border-radius:5px 5px 0 0;transition:height .7s cubic-bezier(.22,.61,.36,1);
+    background:linear-gradient(180deg,var(--nhs-bright),var(--nhs));position:relative;cursor:help}
+  .dbar.late{background:linear-gradient(180deg,var(--warn),#c46f00)}
+  .dbar.verylate{background:linear-gradient(180deg,var(--bad),#a81f14)}
+  .dlabel{font-size:.7rem;color:var(--dim);text-align:center;line-height:1.3}
+  .dval{font-size:.72rem;font-weight:700;color:var(--ink)}
+  .dsplit{border-left:2px dashed var(--nhs-dark);align-self:stretch;position:relative}
+  /* calculator */
+  .calc{margin-bottom:22px}
+  .calc label{font-size:.9rem;color:var(--dim);display:block;margin-bottom:10px}
+  .calc label b{color:var(--nhs);font-size:1.1rem}
+  .calc input[type=range]{width:100%;max-width:420px;accent-color:var(--nhs)}
+  .calcnote{margin-top:22px!important;font-style:italic;line-height:1.6}
   /* Power BI-style floating hover card */
   #hovercard{position:fixed;z-index:9999;pointer-events:none;opacity:0;transform:translateY(4px);
     transition:opacity .12s ease,transform .12s ease;background:#fff;border:1px solid var(--line);
@@ -153,6 +186,7 @@
     h1{font-size:1.8rem}.stats{grid-template-columns:repeat(2,1fr)}
     .dash{grid-template-columns:1fr}.bar-row{grid-template-columns:104px 1fr 50px}
     #map{height:420px}.ecg{display:none}
+    section{padding:48px 0}h1{font-size:2rem}.card{padding:22px 20px}
     footer .fbar{flex-direction:column;align-items:flex-start;gap:6px}
   }
 </style>
@@ -178,7 +212,8 @@
 </div></header>
 
 <section class="wrap">
-  <div class="shead"><span class="num">01</span><h2>Regional map</h2></div>
+  <div class="shead"><h2>Where patients are waiting</h2>
+    <span class="scount">7 commissioning regions</span></div>
   <p class="lede">Each marker is an NHS region. Size = number of patients waiting. Colour = performance
     against the 18-week standard. The region with the lowest performance is highlighted.</p>
   <div class="controls">
@@ -186,12 +221,13 @@
     <button class="btn active" data-metric="pct18">% within 18 weeks</button>
     <button class="btn" data-metric="over52">52+ week waits</button>
   </div>
-  <div class="controls" id="focus"></div>
+  <div class="controls" id="focus" style="margin-bottom:24px"></div>
   <div id="map"></div>
 </section>
 
 <section class="wrap">
-  <div class="shead"><span class="num">02</span><h2>The regional picture</h2></div>
+  <div class="shead"><h2>The regional picture</h2>
+    <span class="scount">List size and performance</span></div>
   <p class="lede">The size of each waiting list, and how far each region falls short of the 92% target.</p>
   <div class="dash">
     <div class="card">
@@ -208,6 +244,56 @@
   <div class="insight" id="insight"></div>
 </section>
 
+
+<section class="wrap">
+  <div class="shead"><h2>Which treatments wait longest</h2>
+    <span class="scount">18 specialties</span></div>
+  <p class="lede">Performance varies far more by specialty than by region. Hover any bar for detail.</p>
+  <div class="card">
+    <h3>Performance by specialty</h3>
+    <p class="note">Share seen within 18 weeks · lowest first · July 2026</p>
+    <div class="bars" id="bars-spec"></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="shead"><h2>How long people are waiting</h2>
+    <span class="scount">53 weeks plotted</span></div>
+  <p class="lede">Plotting every week of wait shows the shape of the queue, not just its size.
+    Switch to the cumulative view to see where the list crosses the 92% standard.</p>
+  <div class="card">
+    <div class="chartheader">
+      <div>
+        <h3>Distribution of waits</h3>
+        <p class="note">Patient pathways by week of wait · July 2026</p>
+      </div>
+      <div class="chartoggle">
+        <button class="btn active" data-curve="weekly">Per week</button>
+        <button class="btn" data-curve="cumulative">Cumulative</button>
+      </div>
+    </div>
+    <div id="curvewrap"><svg id="curve" viewBox="0 0 860 300" role="img"
+      aria-label="Line chart of patient pathways by week of wait"></svg></div>
+    <p class="note curvenote" id="curvenote"></p>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="shead"><h2>What would it take to hit the standard?</h2>
+    <span class="scount">Interactive</span></div>
+  <p class="lede">The 92% standard means no more than 8% of patients waiting beyond 18 weeks.
+    Adjust the target below to see how many additional patients would need to be treated within
+    18 weeks to reach it.</p>
+  <div class="card">
+    <div class="calc">
+      <label for="tgt">Target: <b id="tgtval">92%</b> within 18 weeks</label>
+      <input type="range" id="tgt" min="65" max="95" value="92" step="1">
+    </div>
+    <div class="bars" id="bars-gap"></div>
+    <p class="note calcnote" id="calcnote"></p>
+  </div>
+</section>
+
 <footer><div class="wrap">
   <div class="fnote">
     Source: NHS England, Consultant-led Referral to Treatment Waiting Times, incomplete pathways,
@@ -215,8 +301,8 @@
     regional centres. Built with <a href="https://leafletjs.com">Leaflet</a>.
   </div>
   <div class="fbar">
-    <span><a href="https://github.com/ollielie/nhs-waiting-atlas">GitHub</a> · July 2026</span>
     <span>NHS Waiting List Atlas · Open Source</span>
+    <span><a href="https://github.com/thinn-n/nhs-waiting-list">GitHub</a> · July 2026</span>
   </div>
 </div></footer>
 
@@ -225,6 +311,8 @@
 if(typeof L==='undefined'){document.write('<scr'+'ipt src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"><\/scr'+'ipt>');}
 </script>
 <script>
+const CURVE = {"weeks": [405245, 358416, 337745, 324043, 305328, 290983, 284155, 277212, 257059, 187424, 245333, 236455, 183782, 216521, 202504, 185943, 111268, 164201, 143888, 140841, 137379, 131954, 120598, 111398, 113542, 107959, 99992, 95728, 89079, 75282, 37261, 50382, 71970, 68926, 66534, 63185, 60209, 57951, 53171, 47586, 48213, 45496, 42047, 39337, 35254, 32983, 30767, 27374, 17769, 20446, 19200, 17417, 13554], "regions": {"London": [71724, 62794, 58711, 55616, 52299, 50150, 49869, 49227, 44400, 32397, 42514, 40722, 31540, 37376, 35532, 32884, 18884, 29489, 23637, 23284, 22752, 22022, 19595, 18064, 18610, 17306, 16468, 15849, 14769, 11840, 5567, 8573, 11644, 11422, 10863, 9924, 9157, 9079, 8215, 7463, 7277, 6686, 6028, 5585, 5086, 4608, 4197, 3763, 2294, 2762, 2437, 2117, 1573], "South West": [36843, 32244, 29784, 28835, 27395, 25296, 24165, 23531, 22084, 16479, 20861, 20155, 15396, 18497, 17158, 15410, 9610, 13975, 11566, 11068, 10451, 10123, 9365, 8644, 8974, 8579, 7912, 7460, 6891, 5766, 2843, 3954, 5729, 5251, 5080, 4901, 4800, 4367, 3909, 3532, 3611, 3254, 3146, 2859, 2543, 2238, 2132, 1973, 1276, 1415, 1392, 1291, 919], "South East": [58610, 54345, 50609, 49018, 46121, 44257, 43525, 43079, 40062, 28908, 37818, 36626, 28543, 33979, 31234, 28247, 17184, 23901, 21633, 21714, 21453, 20418, 18668, 17320, 18160, 17098, 16111, 14816, 14098, 12453, 6043, 7678, 11442, 11419, 10484, 10411, 9716, 9450, 8764, 7902, 7832, 7379, 6962, 6514, 5802, 5606, 5171, 4594, 3132, 3542, 3461, 3123, 2680], "Midlands": [73152, 64653, 62551, 59719, 55784, 54124, 52551, 51304, 48677, 34904, 46430, 45393, 35235, 41585, 38620, 36008, 22548, 31239, 28657, 27810, 27188, 26369, 24199, 22120, 21969, 21068, 19257, 18692, 16913, 14870, 7666, 9683, 14084, 12997, 13156, 12471, 11754, 11455, 10731, 9373, 9746, 9292, 8541, 8003, 7231, 6782, 6340, 5650, 3697, 4191, 4017, 3556, 2524], "East of England": [46470, 41693, 39127, 38031, 35780, 34260, 33710, 33639, 31533, 23029, 30060, 28772, 22922, 26827, 25393, 23423, 13844, 21317, 19361, 18489, 18440, 17590, 16073, 15257, 15461, 14770, 13629, 13264, 12492, 10774, 5226, 7067, 10071, 9797, 9779, 9318, 9066, 8759, 7966, 7242, 7323, 6879, 6420, 5943, 5575, 5203, 4955, 4434, 2821, 3347, 3170, 2945, 2521], "North West": [55826, 48648, 46522, 45061, 42987, 40876, 40078, 37782, 34862, 25892, 33571, 32129, 24881, 29266, 27527, 25193, 14641, 22906, 20024, 19781, 19534, 18803, 17447, 16106, 16237, 15534, 14369, 13848, 13026, 10427, 5456, 7316, 10391, 9731, 9250, 8815, 8703, 8127, 7597, 6673, 6951, 6902, 6169, 6072, 5145, 5048, 4514, 4027, 2576, 2987, 2684, 2548, 1833], "North East & Yorkshire": [62620, 54039, 50441, 47763, 44962, 42020, 40257, 38650, 35441, 25815, 34079, 32658, 25265, 28991, 27040, 24778, 14557, 21374, 19010, 18695, 17561, 16629, 15251, 13887, 14131, 13604, 12246, 11799, 10890, 9152, 4460, 6111, 8609, 8309, 7922, 7345, 7013, 6714, 5989, 5401, 5473, 5104, 4781, 4361, 3872, 3498, 3458, 2933, 1973, 2202, 2039, 1837, 1504]}};
+const EXTRA = {"specialties": [{"name": "Oral Surgery", "total": 317913, "pct18": 54.2, "over52": 7702}, {"name": "ENT", "total": 590391, "pct18": 57.6, "over52": 12746}, {"name": "Plastic Surgery", "total": 106324, "pct18": 59.6, "over52": 3195}, {"name": "Gynaecology", "total": 584203, "pct18": 60.0, "over52": 12038}, {"name": "Trauma & Orthopaedics", "total": 836188, "pct18": 60.9, "over52": 19877}, {"name": "Neurology", "total": 185158, "pct18": 61.8, "over52": 1792}, {"name": "General Surgery", "total": 379873, "pct18": 63.0, "over52": 8005}, {"name": "Neurosurgery", "total": 37438, "pct18": 63.6, "over52": 533}, {"name": "Urology", "total": 366314, "pct18": 64.8, "over52": 5024}, {"name": "Cardiology", "total": 357557, "pct18": 67.9, "over52": 2899}, {"name": "Dermatology", "total": 412951, "pct18": 69.2, "over52": 4815}, {"name": "Gastroenterology", "total": 360236, "pct18": 69.4, "over52": 3197}, {"name": "Rheumatology", "total": 117164, "pct18": 70.2, "over52": 1226}, {"name": "Ophthalmology", "total": 618130, "pct18": 72.9, "over52": 4803}, {"name": "Cardiothoracic", "total": 5756, "pct18": 72.9, "over52": 114}, {"name": "General Medicine", "total": 32325, "pct18": 73.4, "over52": 163}, {"name": "Respiratory", "total": 183335, "pct18": 74.8, "over52": 486}, {"name": "Elderly Medicine", "total": 26782, "pct18": 83.8, "over52": 79}], "distribution": [{"label": "0\u20134 wks", "count": 1425449}, {"label": "4\u20138", "count": 1157678}, {"label": "8\u201312", "count": 926271}, {"label": "12\u201318", "count": 1064219}, {"label": "18\u201326", "count": 1007559}, {"label": "26\u201336", "count": 718339}, {"label": "36\u201352", "count": 595220}, {"label": "52+", "count": 13554}]};
 const data = [{"region": "Midlands", "lat": 52.6, "lon": -1.5, "total": 2663288, "pct18": 64.2, "over52": 35278, "over65": 978, "over78": 70}, {"region": "London", "lat": 51.51, "lon": -0.12, "total": 2353710, "pct18": 67.6, "over52": 23568, "over65": 1930, "over78": 290}, {"region": "South East", "lat": 51.1, "lon": -0.6, "total": 2174986, "pct18": 64.0, "over52": 42116, "over65": 3212, "over78": 430}, {"region": "North West", "lat": 53.65, "lon": -2.6, "total": 1949564, "pct18": 64.5, "over52": 26632, "over65": 1006, "over78": 30}, {"region": "North East & Yorkshire", "lat": 54.3, "lon": -1.5, "total": 1890978, "pct18": 68.8, "over52": 24960, "over65": 1728, "over78": 134}, {"region": "East of England", "lat": 52.2, "lon": 0.3, "total": 1803532, "pct18": 61.0, "over52": 46060, "over65": 7936, "over78": 1726}, {"region": "South West", "lat": 50.8, "lon": -3.6, "total": 1166218, "pct18": 68.2, "over52": 14192, "over65": 618, "over78": 52}];
 const fmt=n=>n.toLocaleString('en-GB');
 const maxTotal=Math.max(...data.map(d=>d.total));
@@ -374,12 +462,161 @@ bars('bars-pct','pct18',{pct:true});
 const most52=[...data].sort((a,b)=>b.over52-a.over52)[0];
 const biggest=[...data].sort((a,b)=>b.total-a.total)[0];
 const[,maxPct]=range('pct18');
+const wspec=EXTRA.specialties[0], bspec=EXTRA.specialties[EXTRA.specialties.length-1];
 document.getElementById('insight').innerHTML=
   `<b>Summary:</b> Across all seven commissioning regions, performance currently falls short of the
    92% standard, with the strongest region reaching ${maxPct}%. <b>${worst.region}</b> records the
-   lowest performance at ${worst.pct18}% and the highest number of patients waiting over a year
-   (${fmt(most52.over52)}). <b>${biggest.region}</b> carries the largest waiting list overall, at
-   ${fmt(biggest.total)} pathways.`;
+   lowest regional performance at ${worst.pct18}%, while <b>${biggest.region}</b> carries the
+   largest waiting list at ${fmt(biggest.total)} pathways. The variation by <b>specialty</b> is
+   wider still: <b>${wspec.name}</b> reaches just ${wspec.pct18}% compared with ${bspec.pct18}%
+   for <b>${bspec.name}</b> — a spread of ${(bspec.pct18-wspec.pct18).toFixed(1)} percentage points,
+   suggesting capacity in specific services matters more than geography alone.`;
+
+/* ---- 03 specialty bars ---- */
+(function(){
+  const el=document.getElementById('bars-spec');
+  const rows=EXTRA.specialties;
+  el.innerHTML=rows.map(s=>{
+    const w=Math.min(100,s.pct18/92*100);
+    const cls=s.pct18>=70?'green':s.pct18>=62?'amber':'red';
+    return `<div class="bar-row" data-spec="${s.name}" tabindex="0">
+      <span class="name">${s.name}</span>
+      <span class="track"><span class="target-line" style="left:100%"></span>
+      <span class="fill ${cls}" data-w="${w}" style="width:0%"></span></span>
+      <span class="val">${s.pct18}%</span></div>`;}).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.querySelectorAll('.fill')
+    .forEach((f,i)=>setTimeout(()=>f.style.width=f.dataset.w+'%',i*45))));
+  // hover card for specialties
+  el.querySelectorAll('.bar-row').forEach(row=>{
+    const s=rows.find(x=>x.name===row.dataset.spec);
+    row.addEventListener('mouseenter',()=>showSpecCard(s));
+    row.addEventListener('mousemove',moveCard);
+    row.addEventListener('mouseleave',hideCard);
+    row.addEventListener('focus',()=>showSpecCard(s));
+    row.addEventListener('blur',hideCard);
+  });
+})();
+function showSpecCard(s){
+  const col=s.pct18>=70?'var(--good)':s.pct18>=62?'var(--warn)':'var(--bad)';
+  const label=s.pct18>=70?'Above average':s.pct18>=62?'Around average':'Below average';
+  hc.innerHTML=`<div class="hc-head" style="background:${col}">
+      <span>${s.name}</span><span class="hc-badge">${label}</span></div>
+    <div class="hc-body">
+      <div class="hc-row"><span class="k">Patients waiting</span><span class="v">${fmt(s.total)}</span></div>
+      <div class="hc-row"><span class="k">Within 18 weeks</span><span class="v">${s.pct18}%</span></div>
+      <div class="hc-spark"><span style="width:${Math.min(100,s.pct18/92*100)}%;background:${col}"></span></div>
+      <div class="hc-row"><span class="k">Over 52 weeks</span><span class="v">${fmt(s.over52)}</span></div>
+      <div class="hc-row"><span class="k">Gap to 92%</span><span class="v">${(92-s.pct18).toFixed(1)} pts</span></div>
+    </div>`;
+  hc.classList.add('show');hc.setAttribute('aria-hidden','false');
+}
+
+/* ---- 04 distribution line chart ---- */
+(function(){
+  const svg=document.getElementById('curve');
+  const W=860,H=300,L=58,R=16,T=16,B=42;
+  const iw=W-L-R, ih=H-T-B;
+  const weekly=CURVE.weeks;                      // 53 points, week 1..53
+  const total=weekly.reduce((a,b)=>a+b,0);
+  const cum=[]; let run=0; weekly.forEach(v=>{run+=v;cum.push(run/total*100);});
+  let mode='weekly';
+
+  const x=i=>L+(i/(weekly.length-1))*iw;
+  function render(){
+    const series = mode==='weekly'? weekly : cum;
+    const max = mode==='weekly'? Math.max(...weekly) : 100;
+    const y=v=>T+ih-(v/max)*ih;
+    const pts=series.map((v,i)=>[x(i),y(v)]);
+    const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    const area=line+` L${x(series.length-1).toFixed(1)},${(T+ih).toFixed(1)} L${L},${(T+ih).toFixed(1)} Z`;
+    // y ticks
+    const steps=4, yt=[];
+    for(let s=0;s<=steps;s++){
+      const v=max*s/steps;
+      yt.push(`<line class="grid" x1="${L}" y1="${y(v).toFixed(1)}" x2="${W-R}" y2="${y(v).toFixed(1)}"/>
+        <text class="tick" x="${L-8}" y="${(y(v)+4).toFixed(1)}" text-anchor="end">${
+          mode==='weekly'? (v>=1000? Math.round(v/1000)+'k' : Math.round(v)) : Math.round(v)+'%'}</text>`);
+    }
+    // x ticks at meaningful weeks
+    const marks=[1,9,18,26,36,52];
+    const xt=marks.map(wk=>{const i=wk-1;
+      return `<text class="tick" x="${x(i).toFixed(1)}" y="${T+ih+18}" text-anchor="middle">${wk}</text>`;}).join('');
+    const i18=17;
+    return `<defs><linearGradient id="cgrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(0,114,206,.28)"/><stop offset="100%" stop-color="rgba(0,114,206,.02)"/>
+      </linearGradient></defs>
+      <rect class="beyond" x="${x(i18).toFixed(1)}" y="${T}" width="${(W-R-x(i18)).toFixed(1)}" height="${ih}"/>
+      ${yt.join('')}
+      <path class="area" d="${area}"/>
+      <path class="line" d="${line}"/>
+      <line class="axis" x1="${L}" y1="${T+ih}" x2="${W-R}" y2="${T+ih}"/>
+      <line class="thresh" x1="${x(i18).toFixed(1)}" y1="${T}" x2="${x(i18).toFixed(1)}" y2="${T+ih}"/>
+      <text class="threshlab" x="${(x(i18)+7).toFixed(1)}" y="${T+13}">18-week standard</text>
+      ${xt}
+      <text class="axlabel" x="${(L+iw/2).toFixed(1)}" y="${H-6}" text-anchor="middle">Weeks waited</text>
+      <circle class="hit" id="hitdot" r="4.5" style="display:none"/>
+      <line class="hover-line" id="hitline" y1="${T}" y2="${T+ih}" style="display:none"/>`;
+  }
+  function draw(){svg.innerHTML=render();bindHover();}
+
+  function bindHover(){
+    const dot=svg.querySelector('#hitdot'), vline=svg.querySelector('#hitline');
+    const note=document.getElementById('curvenote');
+    const series = mode==='weekly'? weekly : cum;
+    const max = mode==='weekly'? Math.max(...weekly) : 100;
+    const y=v=>T+ih-(v/max)*ih;
+    svg.onmousemove=e=>{
+      const r=svg.getBoundingClientRect();
+      const px=(e.clientX-r.left)/r.width*W;
+      let i=Math.round((px-L)/iw*(series.length-1));
+      i=Math.max(0,Math.min(series.length-1,i));
+      dot.style.display='';vline.style.display='';
+      dot.setAttribute('cx',x(i).toFixed(1));dot.setAttribute('cy',y(series[i]).toFixed(1));
+      vline.setAttribute('x1',x(i).toFixed(1));vline.setAttribute('x2',x(i).toFixed(1));
+      note.textContent = mode==='weekly'
+        ? `Week ${i+1}: ${fmt(weekly[i])} pathways were waiting between ${i} and ${i+1} weeks.`
+        : `By week ${i+1}, ${cum[i].toFixed(1)}% of the waiting list has been seen.`;
+    };
+    svg.onmouseleave=()=>{dot.style.display='none';vline.style.display='none';setNote();};
+  }
+  function setNote(){
+    const note=document.getElementById('curvenote');
+    note.textContent = mode==='weekly'
+      ? `The list peaks in its first weeks and tails off steadily. Everything to the right of the dashed line is beyond the 18-week standard — ${(100-cum[17]).toFixed(1)}% of the list.`
+      : `The curve crosses ${cum[17].toFixed(1)}% at 18 weeks, against a 92% standard; it reaches 92% only around week ${cum.findIndex(v=>v>=92)+1}.`;
+  }
+  draw();setNote();
+  document.querySelectorAll('[data-curve]').forEach(b=>{
+    b.onclick=()=>{document.querySelectorAll('[data-curve]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');mode=b.dataset.curve;draw();setNote();};
+  });
+})();
+
+/* ---- 05 target scenario calculator ---- */
+(function(){
+  const slider=document.getElementById('tgt'), out=document.getElementById('tgtval');
+  const el=document.getElementById('bars-gap'), note=document.getElementById('calcnote');
+  function render(){
+    const T=+slider.value; out.textContent=T+'%';
+    const rows=data.map(d=>{
+      const need=Math.max(0, Math.round(d.total*(T-d.pct18)/100));
+      return {region:d.region, need, meets:d.pct18>=T};
+    }).sort((a,b)=>b.need-a.need);
+    const max=Math.max(1,...rows.map(r=>r.need));
+    el.innerHTML=rows.map(r=>{
+      const w=(r.need/max)*100;
+      return `<div class="bar-row"><span class="name">${r.region}</span>
+        <span class="track"><span class="fill ${r.meets?'green':'amber'}" style="width:${w}%"></span></span>
+        <span class="val">${r.meets?'\u2713':fmt(r.need)}</span></div>`;}).join('');
+    const totalNeed=rows.reduce((s,r)=>s+r.need,0);
+    const met=rows.filter(r=>r.meets).length;
+    note.textContent = totalNeed===0
+      ? `At a ${T}% target, every region already meets the standard.`
+      : `To reach ${T}%, an estimated ${fmt(totalNeed)} additional pathways would need to be treated within 18 weeks across England${met?` (${met} region${met>1?'s':''} already at or above this level)`:''}.`;
+  }
+  slider.addEventListener('input',render); render();
+})();
+
 </script>
 </body>
 </html>
