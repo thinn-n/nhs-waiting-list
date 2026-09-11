@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHS Waiting List Atlas</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nhs:#005eb8; --nhs-dark:#003087; --nhs-bright:#0072ce; --nhs-light:#41b6e6; --nhs-aqua:#00a9ce;
+    --good:#009639; --warn:#ed8b00; --bad:#da291c;
+    --paper:#f0f4f8; --card:#ffffff; --ink:#212b32; --dim:#4c6272; --line:#d8e1e8;
+    --body:"Inter",-apple-system,system-ui,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--body);background:var(--paper);color:var(--ink);line-height:1.55;
+    -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:var(--nhs)}
+
+  /* NHS blue header bar */
+  .nhsbar{background:var(--nhs);color:#fff}
+  .nhsbar .wrap{display:flex;align-items:center;gap:14px;height:64px}
+  .logo{background:#fff;color:var(--nhs);font-weight:800;font-size:1.15rem;
+    padding:6px 12px;border-radius:4px;letter-spacing:-.02em}
+  .nhsbar .tag{font-size:.95rem;color:#cfe3f7;font-weight:500}
+
+  /* hero with ECG line */
+  header{background:linear-gradient(180deg,#e3eef9,var(--paper));border-bottom:1px solid var(--line);
+    padding:48px 0 40px;position:relative;overflow:hidden}
+  .eyebrow{color:var(--nhs);font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  h1{font-size:2.6rem;line-height:1.08;margin:.25em 0 .3em;font-weight:800;letter-spacing:-.02em;max-width:20ch}
+  .sub{color:var(--dim);max-width:58ch;font-size:1.08rem}
+  .meta{margin-top:16px;color:#5f7386;font-size:.82rem}
+  .ecg{position:absolute;right:-20px;top:30px;width:340px;height:90px;opacity:.5}
+  .ecg path{stroke:var(--nhs);stroke-width:2.5;fill:none;
+    stroke-dasharray:1000;stroke-dashoffset:1000;animation:trace 3s linear infinite}
+  @keyframes trace{to{stroke-dashoffset:0}}
+
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:32px 0 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;
+    box-shadow:0 1px 3px rgba(0,50,135,.05)}
+  .stat .n{font-size:1.95rem;font-weight:800;letter-spacing:-.02em;line-height:1;color:var(--nhs)}
+  .stat .l{font-size:.79rem;color:var(--dim);margin-top:7px;line-height:1.4}
+  .stat.bad .n{color:var(--bad)}
+  .stat.warn .n{color:var(--warn)}
+  .stat[title]{cursor:help}
+
+  section{padding:44px 0}
+  h2{font-size:1.5rem;margin:0 0 4px;font-weight:800;letter-spacing:-.01em}
+  .lede{color:var(--dim);margin:0 0 22px;max-width:64ch}
+
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+  .ctrl-label{color:var(--dim);font-size:.78rem;margin-right:4px;font-weight:500}
+  .btn{background:#fff;color:var(--nhs);border:1px solid var(--line);border-radius:6px;
+    padding:7px 13px;font-size:.8rem;cursor:pointer;font-family:var(--body);font-weight:500;transition:.15s}
+  .btn:hover{border-color:var(--nhs)}
+  .btn.active{background:var(--nhs);border-color:var(--nhs);color:#fff}
+
+  #map{height:560px;border:1px solid var(--line);border-radius:12px;background:#eaf0f6;
+    box-shadow:0 2px 10px rgba(0,50,135,.06)}
+  .leaflet-popup-content-wrapper{background:#fff;color:var(--ink);border-radius:10px;
+    box-shadow:0 6px 24px rgba(0,50,135,.18)}
+  .pop h3{margin:0 0 8px;font-size:1.05rem;color:var(--nhs-dark);font-weight:700}
+  .pop table{border-collapse:collapse;width:100%;font-size:.88rem}
+  .pop td{padding:3px 0;color:var(--dim)}
+  .pop td:last-child{text-align:right;color:var(--ink);font-weight:700}
+  .pop .flag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:.72rem;font-weight:700;margin-top:9px;color:#fff}
+  .legend{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+    font-size:.78rem;color:var(--dim);line-height:1.8;box-shadow:0 2px 8px rgba(0,50,135,.1)}
+  .legend b{color:var(--ink);display:block;margin-bottom:4px}
+  .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+
+  /* breathing + alert markers */
+  @keyframes pulse{0%{transform:scale(.9);opacity:.7}70%{transform:scale(1.6);opacity:0}100%{opacity:0}}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+  @keyframes alertPulse{0%{transform:scale(.8);opacity:.8}70%{transform:scale(2.4);opacity:0}100%{opacity:0}}
+  .pin{position:relative}
+  .pin .ring{position:absolute;inset:0;border-radius:50%;animation:pulse 2.6s ease-out infinite}
+  .pin .core{position:absolute;inset:22%;border-radius:50%;border:2px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.3);animation:breathe 3s ease-in-out infinite}
+  .pin.alert .ring{animation:alertPulse 1.5s cubic-bezier(0,.3,.6,1) infinite}
+  .pin.alert .ring2{position:absolute;inset:0;border-radius:50%;animation:alertPulse 1.5s cubic-bezier(0,.3,.6,1) infinite;animation-delay:.75s}
+  .pin.alert .core{animation:breathe 1.5s ease-in-out infinite}
+
+  .dash{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;
+    box-shadow:0 1px 3px rgba(0,50,135,.05)}
+  .card h3{margin:0 0 3px;font-size:1.05rem;font-weight:700}
+  .card .note{font-size:.79rem;color:var(--dim);margin:0 0 18px}
+  .bars{display:flex;flex-direction:column;gap:12px}
+  .bar-row{display:grid;grid-template-columns:150px 1fr 60px;align-items:center;gap:12px;
+    padding:4px 8px;margin:0 -8px;border-radius:6px;cursor:pointer;transition:background .15s;outline:none}
+  .bar-row:hover,.bar-row.hi,.bar-row:focus-visible{background:#eaf2fb}
+  .bar-row:focus-visible{box-shadow:0 0 0 2px var(--nhs)}
+  .bar-row .name{font-size:.82rem;text-align:right;color:var(--dim);font-weight:500}
+  .bar-row:hover .name,.bar-row.hi .name{color:var(--nhs);font-weight:600}
+  /* map marker highlight when linked from a bar */
+  .pin.hi{z-index:1000!important}
+  .pin.hi .core{transform:scale(1.5);box-shadow:0 0 0 4px rgba(0,94,184,.35),0 2px 6px rgba(0,0,0,.3)}
+  .track{background:#e8eef4;height:22px;border-radius:5px;position:relative;overflow:hidden}
+  .fill{height:100%;background:var(--nhs);border-radius:5px;transition:width .8s cubic-bezier(.22,.61,.36,1)}
+  .fill.red{background:var(--bad)}.fill.amber{background:var(--warn)}
+  .val{font-size:.82rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .target-line{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--nhs-dark);z-index:2}
+
+  .insight{background:#fff5f4;border:1px solid #f3cfcb;border-left:4px solid var(--bad);
+    border-radius:8px;padding:18px 20px;margin-top:24px;color:var(--dim)}
+  .insight b{color:var(--ink)}
+
+  footer{border-top:1px solid var(--line);padding:24px 0 48px;color:#5f7386;font-size:.8rem}
+
+  /* Power BI-style floating hover card */
+  #hovercard{position:fixed;z-index:9999;pointer-events:none;opacity:0;transform:translateY(4px);
+    transition:opacity .12s ease,transform .12s ease;background:#fff;border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 8px 30px rgba(0,50,135,.22);padding:0;width:250px;overflow:hidden}
+  #hovercard.show{opacity:1;transform:translateY(0)}
+  #hovercard .hc-head{padding:12px 14px;color:#fff;font-weight:700;font-size:.98rem;display:flex;
+    align-items:center;justify-content:space-between;gap:8px}
+  #hovercard .hc-body{padding:10px 14px 14px}
+  #hovercard .hc-row{display:flex;justify-content:space-between;gap:14px;padding:5px 0;
+    font-size:.84rem;border-bottom:1px solid #eef2f6}
+  #hovercard .hc-row:last-child{border-bottom:0}
+  #hovercard .hc-row .k{color:var(--dim)}
+  #hovercard .hc-row .v{font-weight:700;font-variant-numeric:tabular-nums}
+  #hovercard .hc-badge{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.25)}
+  #hovercard .hc-spark{height:4px;border-radius:2px;background:#eef2f6;margin-top:3px;overflow:hidden}
+  #hovercard .hc-spark span{display:block;height:100%;border-radius:2px}
+
+  @keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  header .wrap>*{animation:riseIn .6s ease-out both}
+  h1{animation-delay:.05s}.sub{animation-delay:.12s}.meta{animation-delay:.2s}.stats{animation-delay:.28s}
+  #map,.card{animation:riseIn .6s ease-out both}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  @media(max-width:760px){
+    h1{font-size:1.8rem}.stats{grid-template-columns:repeat(2,1fr)}
+    .dash{grid-template-columns:1fr}.bar-row{grid-template-columns:104px 1fr 50px}
+    #map{height:420px}.ecg{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="hovercard" role="dialog" aria-hidden="true"></div>
+
+<div class="nhsbar"><div class="wrap">
+  <span class="logo">NHS</span>
+  <span class="tag">Waiting List Atlas · England</span>
+</div></div>
+
+<header><div class="wrap">
+  <svg class="ecg" viewBox="0 0 340 90" aria-hidden="true">
+    <path d="M0,45 L60,45 L72,45 L80,20 L92,72 L104,10 L116,45 L150,45 L162,45 L170,30 L182,60 L194,45 L340,45"/>
+  </svg>
+  <span class="eyebrow">NHS England · Referral to Treatment</span>
+  <h1>England's Hospital Waiting Lists, Region by Region</h1>
+  <p class="sub">Every region is missing the 18-week treatment target — but not by the same margin.
+    Explore where patients wait longest.</p>
+  <div class="meta">Incomplete pathways · July 2026 · figures are pathways, not individual patients</div>
+  <div class="stats" id="stats"></div>
+</div></header>
+
+<section class="wrap">
+  <h2>Regional map</h2>
+  <p class="lede">Each marker is an NHS region. Size = number of patients waiting. Colour = performance
+    against the 18-week target. The region furthest from target pulses as an alert.</p>
+  <div class="controls">
+    <span class="ctrl-label">Colour by:</span>
+    <button class="btn active" data-metric="pct18">% within 18 weeks</button>
+    <button class="btn" data-metric="over52">52+ week waits</button>
+  </div>
+  <div class="controls" id="focus"></div>
+  <div id="map"></div>
+</section>
+
+<section class="wrap">
+  <h2>The regional picture</h2>
+  <p class="lede">The size of each waiting list, and how far each region falls short of the 92% target.</p>
+  <div class="dash">
+    <div class="card">
+      <h3>Patients waiting</h3>
+      <p class="note">Incomplete pathways · July 2026</p>
+      <div class="bars" id="bars-total"></div>
+    </div>
+    <div class="card">
+      <h3>Meeting the 18-week target</h3>
+      <p class="note">Blue line = 92% target. No region reaches it.</p>
+      <div class="bars" id="bars-pct"></div>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer><div class="wrap">
+  Source: NHS England, Consultant-led Referral to Treatment Waiting Times, incomplete pathways,
+  July 2026. Regional totals summed across all treatment functions. Coordinates are approximate
+  regional centres. Built with <a href="https://leafletjs.com">Leaflet</a>.
+</div></footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+if(typeof L==='undefined'){document.write('<scr'+'ipt src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"><\/scr'+'ipt>');}
+</script>
+<script>
+const data = [{"region": "Midlands", "lat": 52.6, "lon": -1.5, "total": 2663288, "pct18": 64.2, "over52": 35278, "over65": 978, "over78": 70}, {"region": "London", "lat": 51.51, "lon": -0.12, "total": 2353710, "pct18": 67.6, "over52": 23568, "over65": 1930, "over78": 290}, {"region": "South East", "lat": 51.1, "lon": -0.6, "total": 2174986, "pct18": 64.0, "over52": 42116, "over65": 3212, "over78": 430}, {"region": "North West", "lat": 53.65, "lon": -2.6, "total": 1949564, "pct18": 64.5, "over52": 26632, "over65": 1006, "over78": 30}, {"region": "North East & Yorkshire", "lat": 54.3, "lon": -1.5, "total": 1890978, "pct18": 68.8, "over52": 24960, "over65": 1728, "over78": 134}, {"region": "East of England", "lat": 52.2, "lon": 0.3, "total": 1803532, "pct18": 61.0, "over52": 46060, "over65": 7936, "over78": 1726}, {"region": "South West", "lat": 50.8, "lon": -3.6, "total": 1166218, "pct18": 68.2, "over52": 14192, "over65": 618, "over78": 52}];
+const fmt=n=>n.toLocaleString('en-GB');
+const maxTotal=Math.max(...data.map(d=>d.total));
+const range=k=>{const v=data.map(d=>d[k]);return [Math.min(...v),Math.max(...v)];};
+// triage colours: better % -> green, worse -> red
+const good=[0,150,57], bad=[218,41,28];
+function lerp(t){const c=bad.map((b,i)=>Math.round(b+(good[i]-b)*t));return `rgb(${c[0]},${c[1]},${c[2]})`;}
+function colourFor(d,metric){const[mn,mx]=range(metric);let t=(d[metric]-mn)/(mx-mn||1);if(metric==='over52')t=1-t;return lerp(t);}
+const worst=[...data].sort((a,b)=>a.pct18-b.pct18)[0];
+
+/* stats with count-up */
+const natTotal=data.reduce((s,d)=>s+d.total,0);
+const nat52=data.reduce((s,d)=>s+d.over52,0);
+const natPct=(data.reduce((s,d)=>s+d.total*d.pct18,0)/natTotal).toFixed(1);
+const defs=[
+ {v:natTotal/1e6,pre:'',suf:'M',dec:1,l:'Patients waiting in England',tip:'Total incomplete RTT pathways. One patient can have more than one pathway.'},
+ {v:+natPct,pre:'',suf:'%',dec:1,l:'Seen within 18 weeks (target 92%)',cls:'warn',tip:'The NHS constitutional standard is 92% within 18 weeks. England is well below it.'},
+ {v:nat52,pre:'',suf:'',dec:0,l:'Waiting over 52 weeks',cls:'bad',tip:'Patients waiting more than a year to start treatment. Near-zero before 2020.'},
+ {v:worst.pct18,pre:'',suf:'%',dec:1,l:worst.region+' — furthest from target',cls:'bad',tip:'The worst-performing region against the 18-week standard.'},
+];
+document.getElementById('stats').innerHTML=defs.map((s,i)=>
+ `<div class="stat ${s.cls||''}" title="${s.tip}"><div class="n" id="st${i}">0</div><div class="l">${s.l}</div></div>`).join('');
+defs.forEach((s,i)=>{const el=document.getElementById('st'+i),d=1100,t0=performance.now();
+ (function tk(n){let p=Math.min(1,(n-t0)/d);p=1-Math.pow(1-p,3);const v=s.v*p;
+  el.textContent=s.pre+(s.dec?v.toFixed(s.dec):Math.round(v).toLocaleString('en-GB'))+s.suf;
+  if(p<1)requestAnimationFrame(tk);})(t0);});
+
+/* map — light tiles */
+const map=L.map('map',{scrollWheelZoom:false}).setView([53.2,-1.6],6);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{
+  attribution:'&copy; Esri',maxZoom:12}).addTo(map);
+
+let markers=[]; let markerByRegion={};
+function pinIcon(colour,size,alert){
+  return L.divIcon({className:'',iconSize:[size,size],
+    html:`<div class="pin ${alert?'alert':''}" style="width:${size}px;height:${size}px">
+      <div class="ring" style="background:${colour}"></div>
+      ${alert?`<div class="ring2" style="background:${colour}"></div>`:''}
+      <div class="core" style="background:${colour}"></div></div>`});
+}
+function highlightRegion(region, on){
+  document.querySelectorAll(`.bar-row[data-region="${region}"]`).forEach(r=>r.classList.toggle('hi',on));
+  const m=markerByRegion[region]; if(m){const el=m.getElement(); if(el){const pin=el.querySelector('.pin'); if(pin) pin.classList.toggle('hi',on);}}
+}
+function draw(metric){
+  markers.forEach(m=>map.removeLayer(m));markers=[];markerByRegion={};
+  data.forEach(d=>{
+    const size=22+(d.total/maxTotal)*32;
+    const colour=colourFor(d,metric);
+    const m=L.marker([d.lat,d.lon],{icon:pinIcon(colour,size,d.region===worst.region)}).addTo(map);
+    const fc=d.pct18>=70?'var(--good)':d.pct18>=64?'var(--warn)':'var(--bad)';
+    m.bindPopup(`<div class="pop"><h3>${d.region}</h3><table>
+      <tr><td>Patients waiting</td><td>${fmt(d.total)}</td></tr>
+      <tr><td>Within 18 weeks</td><td>${d.pct18}%</td></tr>
+      <tr><td>Over 52 weeks</td><td>${fmt(d.over52)}</td></tr>
+      <tr><td>Over 65 weeks</td><td>${fmt(d.over65)}</td></tr></table>
+      <span class="flag" style="background:${fc}">${d.pct18>=70?'Closest to target':d.pct18>=64?'Mid-pack':'Furthest from target'}</span></div>`);
+    m.bindTooltip(`${d.region} · ${d.pct18}% within 18wks`,{direction:'top'});
+    m.on('mouseover',()=>highlightRegion(d.region,true));
+    m.on('mouseout',()=>highlightRegion(d.region,false));
+    markers.push(m); markerByRegion[d.region]=m;
+  });
+}
+draw('pct18');
+
+const legend=L.control({position:'bottomright'});
+legend.onAdd=function(){const div=L.DomUtil.create('div','legend');
+  div.innerHTML=`<b>Performance</b>
+    <span class="dot" style="background:${lerp(0)}"></span>Furthest from target<br>
+    <span class="dot" style="background:${lerp(1)}"></span>Closest to target<br>
+    <span>Size = patients waiting</span>`;return div;};
+legend.addTo(map);
+
+document.querySelectorAll('[data-metric]').forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll('[data-metric]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');draw(b.dataset.metric);};
+});
+
+const fc=document.getElementById('focus');
+fc.innerHTML='<span class="ctrl-label">Jump to:</span>'+data.map((d,i)=>`<button class="btn" data-i="${i}">${d.region}</button>`).join('');
+fc.querySelectorAll('[data-i]').forEach(b=>{b.onclick=()=>{const d=data[b.dataset.i];map.flyTo([d.lat,d.lon],7,{duration:.8});markers[b.dataset.i].openPopup();};});
+
+function bars(id,key,{pct=false}={}){
+  const el=document.getElementById(id);
+  const rows=[...data].sort((a,b)=>pct?a[key]-b[key]:b[key]-a[key]);
+  const max=pct?92:maxTotal;
+  el.innerHTML=rows.map(d=>{const v=d[key],w=Math.min(100,(v/max)*100);
+    const cls=pct?(v<64?'red':v<70?'amber':''):'';
+    return `<div class="bar-row" data-region="${d.region}" tabindex="0" role="button">
+      <span class="name">${d.region}</span>
+      <span class="track">${pct?'<span class="target-line" style="left:100%"></span>':''}
+      <span class="fill ${cls}" data-w="${w}" style="width:0%"></span></span>
+      <span class="val">${pct?v+'%':fmt(v)}</span></div>`;}).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.querySelectorAll('.fill').forEach((f,i)=>setTimeout(()=>f.style.width=f.dataset.w+'%',i*80))));
+  // interactivity: hover links to map marker, click flies there, shows info card
+  el.querySelectorAll('.bar-row').forEach(row=>{
+    const region=row.dataset.region;
+    row.addEventListener('mouseenter',()=>{highlightRegion(region,true);showCard(region);});
+    row.addEventListener('mousemove',moveCard);
+    row.addEventListener('mouseleave',()=>{highlightRegion(region,false);hideCard();});
+    row.addEventListener('focus',()=>{highlightRegion(region,true);showCard(region);});
+    row.addEventListener('blur',()=>{highlightRegion(region,false);hideCard();});
+    const go=()=>{const d=data.find(x=>x.region===region);
+      document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+      map.flyTo([d.lat,d.lon],7,{duration:.8});
+      setTimeout(()=>markerByRegion[region].openPopup(),650);};
+    row.addEventListener('click',go);
+    row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+}
+
+/* Power BI-style hover card */
+const hc=document.getElementById('hovercard');
+function perf(d){return d.pct18>=70?['Closest to target','var(--good)']:d.pct18>=64?['Mid-pack','var(--warn)']:['Furthest from target','var(--bad)'];}
+function showCard(region){
+  const d=data.find(x=>x.region===region); if(!d) return;
+  const[label,col]=perf(d);
+  const barPct=Math.min(100,d.pct18/92*100);
+  hc.innerHTML=`
+    <div class="hc-head" style="background:${col}">
+      <span>${d.region}</span><span class="hc-badge">${label}</span>
+    </div>
+    <div class="hc-body">
+      <div class="hc-row"><span class="k">Patients waiting</span><span class="v">${fmt(d.total)}</span></div>
+      <div class="hc-row"><span class="k">Within 18 weeks</span><span class="v">${d.pct18}%</span></div>
+      <div class="hc-spark"><span style="width:${barPct}%;background:${col}"></span></div>
+      <div class="hc-row"><span class="k">Over 52 weeks</span><span class="v">${fmt(d.over52)}</span></div>
+      <div class="hc-row"><span class="k">Over 65 weeks</span><span class="v">${fmt(d.over65)}</span></div>
+      <div class="hc-row"><span class="k">Over 78 weeks</span><span class="v">${fmt(d.over78)}</span></div>
+    </div>`;
+  hc.classList.add('show'); hc.setAttribute('aria-hidden','false');
+}
+function moveCard(e){
+  const pad=16, w=250, h=hc.offsetHeight||220;
+  let x=e.clientX+pad, y=e.clientY+pad;
+  if(x+w>innerWidth) x=e.clientX-w-pad;
+  if(y+h>innerHeight) y=e.clientY-h-pad;
+  hc.style.left=x+'px'; hc.style.top=Math.max(8,y)+'px';
+}
+function hideCard(){hc.classList.remove('show');hc.setAttribute('aria-hidden','true');}
+
+bars('bars-total','total');
+bars('bars-pct','pct18',{pct:true});
+
+const most52=[...data].sort((a,b)=>b.over52-a.over52)[0];
+const biggest=[...data].sort((a,b)=>b.total-a.total)[0];
+const[,maxPct]=range('pct18');
+document.getElementById('insight').innerHTML=
+  `<b>The story:</b> No English region meets the 92% target — the best manages just ${maxPct}%.
+   <b>${worst.region}</b> is furthest behind at ${worst.pct18}%, and carries the most year-plus
+   waits (${fmt(most52.over52)}). <b>${biggest.region}</b> holds the largest list overall at
+   ${fmt(biggest.total)} patients.`;
+</script>
+</body>
+</html>
