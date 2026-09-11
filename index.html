@@ -50,6 +50,13 @@
   .stat[title]{cursor:help}
 
   /* section rhythm: generous, consistent vertical scale */
+  /* KPI micro-charts */
+  .stat .mc{margin-top:14px}
+  .stat .mc svg{width:100%;height:auto;display:block;overflow:visible}
+  .stat .mc .mlab{fill:var(--dim);font-size:8.5px;font-family:var(--body)}
+  .stat .mc .mlab-em{fill:var(--ink);font-size:8.5px;font-weight:700;font-family:var(--body)}
+  .stat .mc .tick{stroke:var(--ink);stroke-width:1.6}
+  .stat .mc .trackbg{fill:#e8eef4}
   section{padding:64px 0 68px}
   section + section{border-top:1px solid var(--line)}
   .shead{display:flex;align-items:baseline;justify-content:space-between;gap:24px;
@@ -365,11 +372,80 @@ const defs=[
  {v:worst.pct18,pre:'',suf:'%',dec:1,l:worst.region+' — lowest performance',cls:'bad',tip:'The region currently recording the lowest performance against the 18-week standard.'},
 ];
 document.getElementById('stats').innerHTML=defs.map((s,i)=>
- `<div class="stat ${s.cls||''}" title="${s.tip}"><div class="n" id="st${i}">0</div><div class="l">${s.l}</div></div>`).join('');
+ `<div class="stat ${s.cls||''}" title="${s.tip}"><div class="n" id="st${i}">0</div>
+   <div class="l">${s.l}</div><div class="mc" id="mc${i}"></div></div>`).join('');
 defs.forEach((s,i)=>{const el=document.getElementById('st'+i),d=1100,t0=performance.now();
  (function tk(n){let p=Math.min(1,(n-t0)/d);p=1-Math.pow(1-p,3);const v=s.v*p;
   el.textContent=s.pre+(s.dec?v.toFixed(s.dec):Math.round(v).toLocaleString('en-GB'))+s.suf;
   if(p<1)requestAnimationFrame(tk);})(t0);});
+
+
+/* ---- KPI micro-charts: each answers "compared to what?" ---- */
+(function(){
+  const W=210,H=30;
+  const byTotal=[...data].sort((a,b)=>b.total-a.total);
+  const cols=['#002a6e','#003f96','#005eb8','#0079cf','#1f9bd8','#41b6e6','#6fcbea'];
+
+  /* ① composition: how the 14.0M splits by region */
+  (function(){
+    let x=0, seg='';
+    byTotal.forEach((d,i)=>{
+      const w=(d.total/natTotal)*W;
+      seg+=`<rect x="${x.toFixed(1)}" y="5" width="${Math.max(0.5,w-1).toFixed(1)}" height="13"
+        rx="1.5" fill="${cols[i]}"><title>${d.region}: ${fmt(d.total)}</title></rect>`;
+      x+=w;
+    });
+    document.getElementById('mc0').innerHTML=
+      `<svg viewBox="0 0 ${W} ${H}">${seg}
+        <text class="mlab" x="0" y="27">${byTotal[0].region} largest</text>
+        <text class="mlab" x="${W}" y="27" text-anchor="end">7 regions</text></svg>`;
+  })();
+
+  /* ② bullet chart: performance against the 92% standard */
+  (function(){
+    const v=+natPct, target=92, max=100;
+    const bw=v/max*W, tx=target/max*W;
+    document.getElementById('mc1').innerHTML=
+      `<svg viewBox="0 0 ${W} ${H}">
+        <rect class="trackbg" x="0" y="7" width="${W}" height="10" rx="5"/>
+        <rect x="0" y="7" width="${bw.toFixed(1)}" height="10" rx="5" fill="var(--warn)"/>
+        <line class="tick" x1="${tx.toFixed(1)}" y1="3" x2="${tx.toFixed(1)}" y2="21"/>
+        <text class="mlab" x="0" y="28">0%</text>
+        <text class="mlab-em" x="${tx.toFixed(1)}" y="28" text-anchor="middle">92% standard</text>
+      </svg>`;
+  })();
+
+  /* ③ proportion: 52+ week waits as a share of the whole list */
+  (function(){
+    const share=nat52/natTotal*100;
+    const bw=Math.max(1.5, share/100*W);
+    document.getElementById('mc2').innerHTML=
+      `<svg viewBox="0 0 ${W} ${H}">
+        <rect class="trackbg" x="0" y="7" width="${W}" height="10" rx="5"/>
+        <rect x="0" y="7" width="${bw.toFixed(1)}" height="10" rx="5" fill="var(--bad)"/>
+        <text class="mlab" x="0" y="28">${share.toFixed(1)}% of the waiting list</text>
+      </svg>`;
+  })();
+
+  /* ④ distribution: where the lowest region sits among all seven */
+  (function(){
+    const vals=data.map(d=>d.pct18);
+    const lo=Math.floor(Math.min(...vals)-2), hi=Math.ceil(Math.max(...vals)+2);
+    const px=v=>((v-lo)/(hi-lo))*W;
+    const dots=data.map(d=>{
+      const isWorst=d.region===worst.region;
+      return `<circle cx="${px(d.pct18).toFixed(1)}" cy="12" r="${isWorst?4.6:3.2}"
+        fill="${isWorst?'var(--bad)':'#9fb8ca'}" ${isWorst?'stroke="#fff" stroke-width="1.4"':''}>
+        <title>${d.region}: ${d.pct18}%</title></circle>`;}).join('');
+    document.getElementById('mc3').innerHTML=
+      `<svg viewBox="0 0 ${W} ${H}">
+        <line x1="0" y1="12" x2="${W}" y2="12" stroke="#dde5ec" stroke-width="1.5"/>
+        ${dots}
+        <text class="mlab" x="0" y="28">${lo}%</text>
+        <text class="mlab" x="${W}" y="28" text-anchor="end">${hi}%</text>
+      </svg>`;
+  })();
+})();
 
 /* map — light tiles */
 const map=L.map('map',{scrollWheelZoom:false}).setView([53.2,-1.6],6);
