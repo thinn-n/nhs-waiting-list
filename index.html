@@ -121,11 +121,30 @@
   .insight b{color:var(--ink)}
 
   footer{border-top:1px solid var(--line);padding:26px 0 48px;color:#5f7386;font-size:.8rem}
-  footer .fnote{max-width:80ch;line-height:1.6}
+  footer .fnote{max-width:80ch;line-height:1.6;text-align:justify;hyphens:auto}
   footer .fbar{display:flex;justify-content:space-between;align-items:center;gap:16px;
     margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:.78rem}
   footer .fbar span:first-child{color:var(--dim);font-weight:500}
 
+  /* scatter plot */
+  .scatlegend{display:flex;flex-direction:column;gap:5px;font-size:.76rem;color:var(--dim)}
+  .sl-item{display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .sl-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .sl-dot.bad{background:var(--bad)}
+  .sl-dot.good{background:var(--nhs)}
+  #scatwrap{margin-top:10px}
+  #scatter{width:100%;height:auto;display:block;overflow:visible}
+  #scatter .grid{stroke:#e3eaf1;stroke-width:1}
+  #scatter .axis{stroke:#c3d0db;stroke-width:1}
+  #scatter .tick{fill:var(--dim);font-size:11px;font-family:var(--body)}
+  #scatter .axlabel{fill:var(--ink);font-size:11.5px;font-weight:600;font-family:var(--body)}
+  #scatter .refline{stroke:#8ea6ba;stroke-width:1.25;stroke-dasharray:5 4}
+  #scatter .reflab{fill:var(--dim);font-size:10.5px;font-family:var(--body)}
+  #scatter .quad{fill:rgba(218,41,28,.055)}
+  #scatter .quadlab{fill:var(--bad);font-size:11px;font-weight:700;font-family:var(--body)}
+  #scatter .pt{cursor:pointer;transition:r .15s}
+  #scatter .plabel{fill:var(--ink);font-size:10.5px;font-family:var(--body);pointer-events:none}
+  .scatnote{margin-top:16px!important;font-style:italic;line-height:1.6}
   /* line chart */
   .chartheader{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
   .chartoggle{display:flex;gap:6px}
@@ -246,13 +265,25 @@
 
 
 <section class="wrap">
-  <div class="shead"><h2>Which treatments wait longest</h2>
+  <div class="shead"><h2>Where the backlog is concentrated</h2>
     <span class="scount">18 specialties</span></div>
-  <p class="lede">Performance varies far more by specialty than by region. Hover any bar for detail.</p>
+  <p class="lede">Plotting each specialty by how many patients it has waiting against how well it\u2019s
+    performing shows the two are related \u2014 the biggest lists sit on the weaker side of the average.
+    Hover any point for detail.</p>
   <div class="card">
-    <h3>Performance by specialty</h3>
-    <p class="note">Share seen within 18 weeks · lowest first · July 2026</p>
-    <div class="bars" id="bars-spec"></div>
+    <div class="chartheader">
+      <div>
+        <h3>Waiting list size against performance</h3>
+        <p class="note">Each point is a specialty · July 2026</p>
+      </div>
+      <div class="scatlegend">
+        <span class="sl-item"><i class="sl-dot bad"></i>Large list, below-average performance</span>
+        <span class="sl-item"><i class="sl-dot good"></i>Other specialties</span>
+      </div>
+    </div>
+    <div id="scatwrap"><svg id="scatter" viewBox="0 0 860 420" role="img"
+      aria-label="Scatter plot of specialty waiting list size against share seen within 18 weeks"></svg></div>
+    <p class="note scatnote" id="scatnote"></p>
   </div>
 </section>
 
@@ -472,44 +503,102 @@ document.getElementById('insight').innerHTML=
    for <b>${bspec.name}</b> — a spread of ${(bspec.pct18-wspec.pct18).toFixed(1)} percentage points,
    suggesting capacity in specific services matters more than geography alone.`;
 
-/* ---- 03 specialty bars ---- */
+/* ---- 03 specialty scatter: list size vs performance ---- */
 (function(){
-  const el=document.getElementById('bars-spec');
-  const rows=EXTRA.specialties;
-  el.innerHTML=rows.map(s=>{
-    const w=Math.min(100,s.pct18/92*100);
-    const cls=s.pct18>=70?'green':s.pct18>=62?'amber':'red';
-    return `<div class="bar-row" data-spec="${s.name}" tabindex="0">
-      <span class="name">${s.name}</span>
-      <span class="track"><span class="target-line" style="left:100%"></span>
-      <span class="fill ${cls}" data-w="${w}" style="width:0%"></span></span>
-      <span class="val">${s.pct18}%</span></div>`;}).join('');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>el.querySelectorAll('.fill')
-    .forEach((f,i)=>setTimeout(()=>f.style.width=f.dataset.w+'%',i*45))));
-  // hover card for specialties
-  el.querySelectorAll('.bar-row').forEach(row=>{
-    const s=rows.find(x=>x.name===row.dataset.spec);
-    row.addEventListener('mouseenter',()=>showSpecCard(s));
-    row.addEventListener('mousemove',moveCard);
-    row.addEventListener('mouseleave',hideCard);
-    row.addEventListener('focus',()=>showSpecCard(s));
-    row.addEventListener('blur',hideCard);
+  const svg=document.getElementById('scatter'), note=document.getElementById('scatnote');
+  const S=EXTRA.specialties;
+  const W=860,H=420,L=62,R=118,T=22,B=52;
+  const iw=W-L-R, ih=H-T-B;
+  const xs=S.map(d=>d.pct18), ys=S.map(d=>d.total);
+  const meanX=xs.reduce((a,b)=>a+b,0)/xs.length;
+  const meanY=ys.reduce((a,b)=>a+b,0)/ys.length;
+  const xMin=50, xMax=90;
+  const yMax=Math.ceil(Math.max(...ys)/100000)*100000;
+  const x=v=>L+((v-xMin)/(xMax-xMin))*iw;
+  const y=v=>T+ih-(v/yMax)*ih;
+  const isProblem=d=>d.pct18<meanX && d.total>meanY;
+
+  // gridlines + ticks
+  let g='';
+  for(let v=0;v<=yMax;v+=200000){
+    g+=`<line class="grid" x1="${L}" y1="${y(v).toFixed(1)}" x2="${W-R}" y2="${y(v).toFixed(1)}"/>
+        <text class="tick" x="${L-9}" y="${(y(v)+4).toFixed(1)}" text-anchor="end">${v?Math.round(v/1000)+'k':0}</text>`;
+  }
+  for(let v=50;v<=90;v+=10){
+    g+=`<text class="tick" x="${x(v).toFixed(1)}" y="${T+ih+20}" text-anchor="middle">${v}%</text>`;
+  }
+
+  // problem quadrant shading: below mean performance AND above mean size
+  const quad=`<rect class="quad" x="${L}" y="${T}" width="${(x(meanX)-L).toFixed(1)}" height="${(y(meanY)-T).toFixed(1)}"/>
+    <text class="quadlab" x="${(x(meanX)-8).toFixed(1)}" y="${(T+15)}" text-anchor="end">Large lists, below-average performance</text>`;
+
+  // reference lines
+  const refs=`
+    <line class="refline" x1="${x(meanX).toFixed(1)}" y1="${T}" x2="${x(meanX).toFixed(1)}" y2="${T+ih}"/>
+    <text class="reflab" x="${(x(meanX)+5).toFixed(1)}" y="${T+ih-6}">average ${meanX.toFixed(1)}%</text>
+    <line class="refline" x1="${L}" y1="${y(meanY).toFixed(1)}" x2="${W-R}" y2="${y(meanY).toFixed(1)}"/>
+    <text class="reflab" x="${W-R-4}" y="${(y(meanY)-6).toFixed(1)}" text-anchor="end">average list size</text>`;
+
+  // points with collision-aware labels
+  const placed=[];               // occupied label boxes
+  const order=[...S].map((d,i)=>({d,i})).sort((a,b)=>b.d.total-a.d.total); // biggest labelled first
+  const labels={};
+  order.forEach(({d,i})=>{
+    const cx=x(d.pct18), cy=y(d.total);
+    const wpx=d.name.length*5.5+14;
+    // candidate offsets: right, left, above, below
+    const cands=[[11,3.5,'start'],[-11,3.5,'end'],[0,-12,'middle'],[0,16,'middle']];
+    const boxFor=c=>{
+      const lx=cx+c[0], ly=cy+c[1];
+      const x0 = c[2]==='start'? lx : c[2]==='end'? lx-wpx : lx-wpx/2;
+      return {x0, x1:x0+wpx, y0:ly-10, y1:ly+5};
+    };
+    let chosen=null, chosenBox=null;
+    for(const c of cands){
+      const box=boxFor(c);
+      const clash=placed.some(p=>!(box.x1<p.x0-3||box.x0>p.x1+3||box.y1<p.y0-2||box.y0>p.y1+2));
+      const inside = box.x0>L-4 && box.x1<W-6 && box.y0>T-2 && box.y1<T+ih+4;
+      if(!clash && inside){chosen=c;chosenBox=box;break;}
+    }
+    if(!chosen){labels[i]=null;return;}   // too crowded: rely on hover
+    placed.push(chosenBox);
+    labels[i]=chosen;
   });
+  const pts=S.map((d,i)=>{
+    const cx=x(d.pct18), cy=y(d.total), col=isProblem(d)?'var(--bad)':'var(--nhs)';
+    const lab=labels[i];
+    const labSvg = lab
+      ? `<text class="plabel" x="${(cx+lab[0]).toFixed(1)}" y="${(cy+lab[1]).toFixed(1)}" text-anchor="${lab[2]}">${d.name}</text>`
+      : '';
+    return `<g class="ptg" data-i="${i}">
+      <circle class="pt" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.5"
+        fill="${col}" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/>
+      ${labSvg}
+    </g>`;}).join('');
+
+  svg.innerHTML=`${quad}${g}${refs}
+    <line class="axis" x1="${L}" y1="${T+ih}" x2="${W-R}" y2="${T+ih}"/>
+    <line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ih}"/>
+    ${pts}
+    <text class="axlabel" x="${(L+iw/2).toFixed(1)}" y="${H-8}" text-anchor="middle">Share seen within 18 weeks</text>
+    <text class="axlabel" transform="translate(16,${(T+ih/2).toFixed(1)}) rotate(-90)" text-anchor="middle">Patients waiting</text>`;
+
+  // hover -> reuse the specialty info card
+  svg.querySelectorAll('.ptg').forEach(g=>{
+    const d=S[+g.dataset.i];
+    g.addEventListener('mouseenter',()=>{g.querySelector('.pt').setAttribute('r','9');showSpecCard(d);});
+    g.addEventListener('mousemove',moveCard);
+    g.addEventListener('mouseleave',()=>{g.querySelector('.pt').setAttribute('r','6.5');hideCard();});
+  });
+
+  const prob=S.filter(isProblem).sort((a,b)=>b.total-a.total);
+  const probTotal=prob.reduce((s,d)=>s+d.total,0);
+  const allTotal=ys.reduce((a,b)=>a+b,0);
+  note.innerHTML=`The largest specialties tend to perform worst: the ${prob.length} services in the
+    shaded corner — led by <b>${prob[0].name}</b> and <b>${prob[1].name}</b> — hold
+    ${fmt(probTotal)} pathways between them, about ${Math.round(probTotal/allTotal*100)}% of the
+    entire list, while all sitting below the ${meanX.toFixed(1)}% average.`;
 })();
-function showSpecCard(s){
-  const col=s.pct18>=70?'var(--good)':s.pct18>=62?'var(--warn)':'var(--bad)';
-  const label=s.pct18>=70?'Above average':s.pct18>=62?'Around average':'Below average';
-  hc.innerHTML=`<div class="hc-head" style="background:${col}">
-      <span>${s.name}</span><span class="hc-badge">${label}</span></div>
-    <div class="hc-body">
-      <div class="hc-row"><span class="k">Patients waiting</span><span class="v">${fmt(s.total)}</span></div>
-      <div class="hc-row"><span class="k">Within 18 weeks</span><span class="v">${s.pct18}%</span></div>
-      <div class="hc-spark"><span style="width:${Math.min(100,s.pct18/92*100)}%;background:${col}"></span></div>
-      <div class="hc-row"><span class="k">Over 52 weeks</span><span class="v">${fmt(s.over52)}</span></div>
-      <div class="hc-row"><span class="k">Gap to 92%</span><span class="v">${(92-s.pct18).toFixed(1)} pts</span></div>
-    </div>`;
-  hc.classList.add('show');hc.setAttribute('aria-hidden','false');
-}
 
 /* ---- 04 distribution line chart ---- */
 (function(){
