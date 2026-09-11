@@ -2,7 +2,7 @@
 
 An interactive, NHS-branded dashboard mapping England's hospital waiting lists region by region, built from official NHS England data.
 
-**Live site:** https://ollielie.github.io/nhs-waiting-atlas/
+**Live site:** https://thinn-n.github.io/nhs-waiting-list/
 
 ## What it shows
 
